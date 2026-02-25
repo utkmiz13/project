@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gram Sahayak AI 🌾 — Rural Assistant</title>
+<style>
+/* ============================================================
+   ROOT VARIABLES & RESET
+============================================================ */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#2e7d32; --lgreen:#4caf50; --dgreen:#1b5e20;
+  --bg:#f1f8e9; --card:#fff; --text:#1b1b1b; --muted:#666;
+  --ubub:#c8e6c9; --bbub:#fff; --border:#dcedc8;
+  --shadow:0 4px 20px rgba(0,0,0,.10); --r:16px;
+  --header:linear-gradient(135deg,#2e7d32,#4caf50);
+  --inputbg:#fff; --statbg:#f9fbe7;
+}
+body.dark{
+  --bg:#121212; --card:#1e1e1e; --text:#e0e0e0; --muted:#aaa;
+  --ubub:#2e7d32; --bbub:#1e1e1e; --border:#333;
+  --header:linear-gradient(135deg,#1b5e20,#2e7d32);
+  --inputbg:#1e1e1e; --statbg:#161616;
+}
+html,body{height:100%;font-family:'Segoe UI',Tahoma,sans-serif;
+  background:var(--bg);color:var(--text);display:flex;
+  flex-direction:column;transition:background .3s,color .3s;}
+
+/* ============================================================
+   SCROLLBAR
+============================================================ */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:#a5d6a7;border-radius:5px}
+
+/* ============================================================
+   HEADER
+============================================================ */
+header{
+  background:var(--header);padding:13px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);position:sticky;top:0;z-index:100;
+}
+.hdr-left{display:flex;align-items:center;gap:11px}
+.logo{width:46px;height:46px;background:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:var(--shadow);flex-shrink:0}
+.hdr-title h1{font-size:1.15rem;color:#fff;font-weight:700}
+.hdr-title p{font-size:.7rem;color:rgba(255,255,255,.85)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.status-badge{display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.2);padding:5px 12px;border-radius:20px;
+  font-size:.75rem;color:#fff;font-weight:600}
+.sdot{width:8px;height:8px;border-radius:50%;background:#a5d6a7;
+  animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.hdr-btn{background:rgba(255,255,255,.2);border:none;color:#fff;
+  width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.hdr-btn:hover{background:rgba(255,255,255,.35)}
+
+/* ============================================================
+   OFFLINE / ALERT BANNERS
+============================================================ */
+.banner{padding:7px 16px;font-size:.78rem;font-weight:600;display:none}
+#offlineBanner{background:#fff3e0;border-left:4px solid #ff9800;color:#e65100}
+#updateBanner{background:#e3f2fd;border-left:4px solid #2196f3;color:#0d47a1}
+
+/* ============================================================
+   TOPIC TABS
+============================================================ */
+.topics{background:var(--card);padding:10px 14px;display:flex;
+  gap:8px;overflow-x:auto;scrollbar-width:none;
+  box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.topics::-webkit-scrollbar{display:none}
+.tbtn{white-space:nowrap;padding:6px 14px;border:2px solid var(--lgreen);
+  background:var(--card);border-radius:20px;cursor:pointer;font-size:.78rem;
+  font-weight:600;color:var(--green);transition:all .2s}
+.tbtn:hover,.tbtn.active{background:var(--lgreen);color:#fff;border-color:var(--lgreen)}
+
+/* ============================================================
+   STATS BAR
+============================================================ */
+.stats-bar{background:var(--statbg);border-bottom:1px solid var(--border);
+  padding:6px 16px;display:flex;gap:18px;font-size:.72rem;color:var(--muted);
+  flex-wrap:wrap}
+.stat{display:flex;align-items:center;gap:4px}
+.stat strong{color:var(--green)}
+
+/* ============================================================
+   CHAT AREA
+============================================================ */
+.chat-wrap{flex:1;overflow-y:auto;padding:16px 14px;
+  display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+
+/* ============================================================
+   MESSAGE BUBBLES
+============================================================ */
+.msg{display:flex;align-items:flex-end;gap:9px;
+  animation:fadeUp .3s ease;max-width:88%}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.bot{align-self:flex-start}
+.av{width:34px;height:34px;border-radius:50%;font-size:17px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av.bot-av{background:var(--lgreen)}
+.av.usr-av{background:#81c784}
+.bubble{padding:11px 15px;border-radius:var(--r);font-size:.88rem;
+  line-height:1.6;box-shadow:var(--shadow);max-width:100%;word-wrap:break-word}
+.msg.user .bubble{background:var(--ubub);border-bottom-right-radius:4px;
+  color:var(--text)}
+.msg.bot .bubble{background:var(--bbub);border-bottom-left-radius:4px;
+  border-left:4px solid var(--lgreen);color:var(--text)}
+.ts{font-size:.65rem;color:var(--muted);margin-top:5px;text-align:right}
+.read-aloud{background:none;border:none;cursor:pointer;font-size:.8rem;
+  color:var(--lgreen);margin-top:4px;padding:2px 6px;border-radius:8px;
+  border:1px solid var(--lgreen);transition:all .2s}
+.read-aloud:hover{background:var(--lgreen);color:#fff}
+
+/* ============================================================
+   TYPING INDICATOR
+============================================================ */
+.typing-dots{display:flex;gap:5px;align-items:center;padding:8px 12px}
+.typing-dots span{width:8px;height:8px;background:var(--lgreen);
+  border-radius:50%;animation:bounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ============================================================
+   CHIPS / SUGGESTIONS
+============================================================ */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.chip{background:#e8f5e9;border:1px solid var(--lgreen);color:var(--green);
+  padding:4px 11px;border-radius:14px;font-size:.75rem;cursor:pointer;
+  transition:all .2s;font-weight:500}
+.chip:hover{background:var(--lgreen);color:#fff}
+body.dark .chip{background:#1b3a1c;color:#a5d6a7}
+body.dark .chip:hover{background:var(--lgreen);color:#fff}
+
+/* ============================================================
+   INPUT BAR
+============================================================ */
+.input-bar{background:var(--inputbg);padding:12px 14px;
+  display:flex;gap:9px;align-items:center;
+  box-shadow:0 -2px 10px rgba(0,0,0,.08);
+  border-top:1px solid var(--border)}
+#userInput{flex:1;border:2px solid var(--border);border-radius:22px;
+  padding:9px 16px;font-size:.88rem;outline:none;
+  transition:border-color .2s;font-family:inherit;resize:none;
+  max-height:90px;background:var(--inputbg);color:var(--text)}
+#userInput:focus{border-color:var(--lgreen)}
+.ibtn{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+  font-size:1rem;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0}
+#micBtn{background:#e8f5e9;color:var(--green)}
+#micBtn.listening{background:#ffcdd2;color:#c62828;animation:micP 1s infinite}
+@keyframes micP{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,.3)}50%{box-shadow:0 0 0 10px rgba(198,40,40,0)}}
+#sendBtn{background:var(--lgreen);color:#fff}
+#sendBtn:hover{background:var(--dgreen)}
+#micBtn:hover{background:#c8e6c9}
+.lang-sel{padding:5px 9px;border:2px solid var(--border);border-radius:10px;
+  font-size:.75rem;color:var(--green);background:var(--inputbg);
+  cursor:pointer;outline:none;color:var(--text)}
+
+/* ============================================================
+   MODAL (Settings / Info)
+============================================================ */
+.modal-overlay{display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:var(--r);padding:24px;
+  width:min(420px,92vw);max-height:80vh;overflow-y:auto;
+  box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative}
+.modal h2{color:var(--green);margin-bottom:14px;font-size:1.1rem}
+.modal-close{position:absolute;top:14px;right:16px;background:none;
+  border:none;font-size:1.3rem;cursor:pointer;color:var(--muted)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border:none}
+.setting-label{font-size:.88rem;font-weight:600}
+.setting-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.toggle{width:42px;height:24px;background:#ccc;border-radius:12px;
+  cursor:pointer;position:relative;transition:background .2s;border:none}
+.toggle.on{background:var(--lgreen)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;
+  background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s}
+.toggle.on::after{left:21px}
+.modal-btn{background:var(--lgreen);color:#fff;border:none;padding:8px 18px;
+  border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;
+  transition:background .2s}
+.modal-btn:hover{background:var(--dgreen)}
+.modal-btn.danger{background:#e53935}
+.modal-btn.danger:hover{background:#b71c1c}
+
+/* ============================================================
+   WEATHER WIDGET
+============================================================ */
+.weather-widget{background:linear-gradient(135deg,#1565c0,#42a5f5);
+  border-radius:var(--r);padding:14px 18px;color:#fff;
+  margin:10px 14px 0;box-shadow:var(--shadow);display:none}
+.weather-widget.show{display:block}
+.ww-top{display:flex;justify-content:space-between;align-items:center}
+.ww-temp{font-size:2.2rem;font-weight:700}
+.ww-info{text-align:right;font-size:.8rem;opacity:.9}
+.ww-bot{display:flex;gap:18px;margin-top:10px;font-size:.78rem;opacity:.9}
+.ww-row{display:flex;align-items:center;gap:5px}
+
+/* ============================================================
+   QUICK ACTION CARDS
+============================================================ */
+.qa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+  padding:12px 14px}
+.qa-card{background:var(--card);border:2px solid var(--border);
+  border-radius:12px;padding:12px;cursor:pointer;transition:all .2s;
+  text-align:center}
+.qa-card:hover{border-color:var(--lgreen);transform:translateY(-2px);
+  box-shadow:var(--shadow)}
+.qa-icon{font-size:1.6rem;margin-bottom:6px}
+.qa-title{font-size:.78rem;font-weight:700;color:var(--text)}
+.qa-sub{font-size:.68rem;color:var(--muted);margin-top:3px}
+
+/* ============================================================
+   EMERGENCY PANEL
+============================================================ */
+.emergency{background:#ffebee;border:2px solid #ef9a9a;border-radius:var(--r);
+  padding:12px 16px;margin:0 14px 10px;display:none}
+.emergency.show{display:block}
+.emer-title{color:#c62828;font-weight:700;font-size:.9rem;margin-bottom:8px}
+.emer-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.emer-btn{background:#fff;border:1px solid #ef9a9a;border-radius:10px;
+  padding:8px;cursor:pointer;text-align:center;font-size:.75rem;
+  font-weight:600;color:#c62828;transition:all .2s}
+.emer-btn:hover{background:#c62828;color:#fff}
+body.dark .emergency{background:#2d1010;border-color:#7f1d1d}
+body.dark .emer-btn{background:#3d1010;color:#ef9a9a}
+
+/* ============================================================
+   PROGRESS BAR
+============================================================ */
+#progress{height:3px;background:var(--lgreen);width:0%;
+  transition:width .4s;position:fixed;top:0;left:0;z-index:999}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:480px){
+  .hdr-title h1{font-size:1rem}
+  .bubble{font-size:.82rem}
+  .qa-grid{grid-template-columns:1fr 1fr}
+  .stats-bar{gap:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress"></div>
+
+<!-- ============================================================
+   SETTINGS MODAL
+============================================================ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+    <h2>⚙️ Settings</h2>
+
+    <div class="setting-row">
+      <div><div class="setting-label">🌙 Dark Mode</div>
+        <div class="setting-sub">Switch to dark theme</div></div>
+      <button class="toggle" id="darkToggle" onclick="toggleDark()"></button>
+    </div>
+
+    <div class="setting-row">
+      <div><div class="setting-label">🔊 Auto Read Aloud</div>
+        <div class="setting-sub">Bot reads every reply automatically</div></div>
+      <button class="toggle" id="ttsToggle" onclick="toggleTTS()"></button>
+    </div>
+
+    <div class="setting-row">
+      <div><div class="setting-label">📳 Sound Alerts</div>
+        <div class="setting-sub">Play sound on new message</div></div>
+      <button class="toggle on" id="soundToggle" onclick="toggleSound()"></button>
+    </div>
+
+    <div class="setting-row">
+      <div><div class="setting-label">🌐 Language</div>
+        <div class="setting-sub">Voice input & output language</div></div>
+      <select class="lang-sel" id="modalLang" onchange="changeLanguage()">
+        <option value="en-IN">🇮🇳 English (India)</option>
+        <option value="hi-IN">🇮🇳 Hindi</option>
+        <option value="ta-IN">🇮🇳 Tamil</option>
+        <option value="te-IN">🇮🇳 Telugu</option>
+        <option value="kn-IN">🇮🇳 Kannada</option>
+        <option value="mr-IN">🇮🇳 Marathi</option>
+        <option value="bn-IN">🇮🇳 Bengali</option>
+        <option value="sw-KE">🇰🇪 Swahili</option>
+        <option value="en-US">🇺🇸 English (US)</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div><div class="setting-label">🗑️ Clear Chat History</div>
+        <div class="setting-sub">Remove all messages from this session</div></div>
+      <button class="modal-btn danger" onclick="clearChat()">Clear</button>
+    </div>
+
+    <div class="setting-row">
+      <div><div class="setting-label">💾 Export Chat</div>
+        <div class="setting-sub">Download conversation as .txt file</div></div>
+      <button class="modal-btn" onclick="exportChat()">Export</button>
+    </div>
+
+    <div class="setting-row">
+      <div><div class="setting-label">🔋 Data Saver Mode</div>
+        <div class="setting-sub">Shorter replies to save bandwidth</div></div>
+      <button class="toggle" id="saverToggle" onclick="toggleSaver()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+   INFO MODAL
+============================================================ -->
+<div class="modal-overlay" id="infoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+    <h2>ℹ️ About Gram Sahayak AI</h2>
+    <p style="font-size:.85rem;line-height:1.7;color:var(--muted)">
+      <strong style="color:var(--green)">Gram Sahayak AI</strong> is a low-bandwidth, 
+      offline-first AI assistant designed for rural communities.<br><br>
+      ✅ Works without internet (local knowledge base)<br>
+      🎙️ Voice input & text-to-speech output<br>
+      🌐 Multilingual support (8 languages)<br>
+      🌱 Agriculture, Health, Weather, Gov Schemes, Education<br>
+      📲 Mobile-friendly & battery efficient<br>
+      💾 No data stored on any server<br><br>
+      <strong style="color:var(--green)">Emergency Helplines:</strong><br>
+      🚑 Medical: <strong>108</strong><br>
+      🚒 Fire: <strong>101</strong><br>
+      👮 Police: <strong>100</strong><br>
+      🌊 Disaster: <strong>1078</strong> (NDRF)<br>
+      👩‍⚕️ Women Helpline: <strong>181</strong><br>
+      ☎️ Kisan Helpline: <strong>1800-180-1551</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================
+   HEADER
+============================================================ -->
+<header>
+  <div class="hdr-left">
+    <div class="logo">🌾</div>
+    <div class="hdr-title">
+      <h1>Gram Sahayak AI</h1>
+      <p>Low-Bandwidth Rural Assistant</p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-badge">
+      <div class="sdot"></div>
+      <span id="statusText">Online</span>
+    </div>
+    <button class="hdr-btn" onclick="toggleEmergency()" title="Emergency">🆘</button>
+    <button class="hdr-btn" onclick="toggleWeather()" title="Weather">🌤️</button>
+    <button class="hdr-btn" onclick="openModal('infoModal')" title="Info">ℹ️</button>
+    <button class="hdr-btn" onclick="openModal('settingsModal')" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<!-- ============================================================
+   BANNERS
+============================================================ -->
+<div class="banner" id="offlineBanner">⚠️ You're offline — Using local knowledge base only. All core features still work!</div>
+<div class="banner" id="updateBanner">🔄 New knowledge updates available — <a href="#" style="color:inherit" onclick="simulateUpdate()">Tap to sync</a></div>
+
+<!-- ============================================================
+   WEATHER WIDGET
+============================================================ -->
+<div class="weather-widget" id="weatherWidget">
+  <div class="ww-top">
+    <div>
+      <div style="font-size:.8rem;opacity:.85" id="ww-loc">📍 Loading location...</div>
+      <div class="ww-temp" id="ww-temp">--°C</div>
+      <div style="font-size:.85rem" id="ww-desc">Fetching weather...</div>
+    </div>
+    <div class="ww-info">
+      <div style="font-size:2rem" id="ww-icon">🌤️</div>
+      <div id="ww-date"></div>
+    </div>
+  </div>
+  <div class="ww-bot">
+    <div class="ww-row">💧 Humidity: <strong id="ww-hum">--%</strong></div>
+    <div class="ww-row">💨 Wind: <strong id="ww-wind">-- km/h</strong></div>
+    <div class="ww-row">🌡️ Feels: <strong id="ww-feels">--°C</strong></div>
+  </div>
+</div>
+
+<!-- ============================================================
+   EMERGENCY PANEL
+============================================================ -->
+<div class="emergency" id="emergencyPanel">
+  <div class="emer-title">🆘 Emergency Helplines — Tap to Call</div>
+  <div class="emer-grid">
+    <button class="emer-btn" onclick="callNum('108')">🚑 Ambulance<br><strong>108</strong></button>
+    <button class="emer-btn" onclick="callNum('100')">👮 Police<br><strong>100</strong></button>
+    <button class="emer-btn" onclick="callNum('101')">🚒 Fire Brigade<br><strong>101</strong></button>
+    <button class="emer-btn" onclick="callNum('1078')">🌊 NDRF Disaster<br><strong>1078</strong></button>
+    <button class="emer-btn" onclick="callNum('181')">👩 Women Safety<br><strong>181</strong></button>
+    <button class="emer-btn" onclick="callNum('1800-180-1551')">🌾 Kisan Helpline<br><strong>1800-180-1551</strong></button>
+  </div>
+</div>
+
+<!-- ============================================================
+   TOPIC TABS
+============================================================ -->
+<div class="topics">
+  <button class="tbtn active" onclick="setTopic('all',this)">🌐 All</button>
+  <button class="tbtn" onclick="setTopic('agriculture',this)">🌱 Agriculture</button>
+  <button class="tbtn" onclick="setTopic('health',this)">❤️ Health</button>
+  <button class="tbtn" onclick="setTopic('weather',this)">🌦️ Weather</button>
+  <button class="tbtn" onclick="setTopic('government',this)">🏛️ Gov Schemes</button>
+  <button class="tbtn" onclick="setTopic('education',this)">📚 Education</button>
+  <button class="tbtn" onclick="setTopic('livestock',this)">🐄 Livestock</button>
+  <button class="tbtn" onclick="setTopic('finance',this)">💰 Finance</button>
+  <button class="tbtn" onclick="setTopic('market',this)">📊 Market</button>
+</div>
+
+<!-- ============================================================
+   STATS BAR
+============================================================ -->
+<div class="stats-bar">
+  <div class="stat">💬 <strong id="msgCount">0</strong> msgs</div>
+  <div class="stat">📦 <strong id="kbUsed">0 B</strong> used</div>
+  <div class="stat">🔋 <strong id="modeText">Normal</strong></div>
+  <div class="stat">⏱️ <strong id="sessionTime">0:00</strong></div>
+  <div class="stat" id="weatherStat" style="display:none">🌡️ <strong id="tempStat">--°C</strong></div>
+</div>
+
+<!-- ============================================================
+   QUICK ACTION CARDS (shown before first message)
+============================================================ -->
+<div class="qa-grid" id="qaGrid">
+  <div class="qa-card" onclick="sendMessage('Best crop for this season')">
+    <div class="qa-icon">🌱</div>
+    <div class="qa-title">Crop Advice</div>
+    <div class="qa-sub">Season & soil tips</div>
+  </div>
+  <div class="qa-card" onclick="sendMessage('How to treat fever at home')">
+    <div class="qa-icon">❤️</div>
+    <div class="qa-title">Health Help</div>
+    <div class="qa-sub">Symptoms & first aid</div>
+  </div>
+  <div class="qa-card" onclick="sendMessage('PM KISAN scheme details')">
+    <div class="qa-icon">🏛️</div>
+    <div class="qa-title">Gov Schemes</div>
+    <div class="qa-sub">Benefits & apply</div>
+  </div>
+  <div class="qa-card" onclick="sendMessage('Flood and monsoon advisory')">
+    <div class="qa-icon">🌦️</div>
+    <div class="qa-title">Weather Tips</div>
+    <div class="qa-sub">Seasonal advisory</div>
+  </div>
+  <div class="qa-card" onclick="sendMessage('How to take care of cows')">
+    <div class="qa-icon">🐄</div>
+    <div class="qa-title">Livestock Care</div>
+    <div class="qa-sub">Animal health</div>
+  </div>
+  <div class="qa-card" onclick="sendMessage('How to save money and get loan')">
+    <div class="qa-icon">💰</div>
+    <div class="qa-title">Finance Tips</div>
+    <div class="qa-sub">Savings & loans</div>
+  </div>
+</div>
+
+<!-- ============================================================
+   CHAT AREA
+============================================================ -->
+<div class="chat-wrap" id="chatBox"></div>
+
+<!-- ============================================================
+   INPUT BAR
+============================================================ -->
+<div class="input-bar">
+  <select class="lang-sel" id="langSelect" onchange="changeLanguage()">
+    <option value="en-IN">🇮🇳 EN</option>
+    <option value="hi-IN">🇮🇳 HI</option>
+    <option value="ta-IN">🇮🇳 TA</option>
+    <option value="te-IN">🇮🇳 TE</option>
+    <option value="kn-IN">🇮🇳 KN</option>
+    <option value="mr-IN">🇮🇳 MR</option>
+    <option value="bn-IN">🇮🇳 BN</option>
+    <option value="sw-KE">🇰🇪 SW</option>
+  </select>
+  <textarea id="userInput" rows="1"
+    placeholder="Ask about farming, health, weather..."
+    oninput="autoResize(this)"
+    onkeydown="handleKey(event)"></textarea>
+  <button class="ibtn" id="micBtn" onclick="toggleMic()" title="Voice Input">🎙️</button>
+  <button class="ibtn" id="sendBtn" onclick="sendMessage()" title="Send">➤</button>
+</div>
+
+<!-- ============================================================
+   AUDIO (notification sound)
+============================================================ -->
+<audio id="notifSound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..." preload="auto"></audio>
+
+<!-- ============================================================
+   JAVASCRIPT
+============================================================ -->
+<script>
+/* ============================================================
+   MASSIVE KNOWLEDGE BASE
+============================================================ */
+const KB = {
+
+  agriculture:[
+    {
+      kw:["rice","paddy","dhaan","sowing rice","transplant"],
+      a:`🌾 <b>Rice / Paddy Farming — Complete Guide</b><br><br>
+<b>Varieties:</b> IR-64, Swarna, MTU-1010, BPT-5204 (Sona Masoori), PR-106, HUR-36<br>
+<b>Sowing Season:</b> Kharif (June–July) | Rabi (Nov–Dec in some regions)<br>
+<b>Nursery:</b> Sow in nursery bed → transplant 25–30 day old seedlings<br>
+<b>Spacing:</b> 20×15 cm for higher yield | Direct seeding also works<br>
+<b>Water:</b> Keep 5 cm water up to panicle initiation; drain before harvest<br>
+<b>Fertilizer (per acre):</b> Urea 50 kg + DAP 25 kg + MOP 17 kg<br>&nbsp;&nbsp;Split Urea: Basal(¼) + Tillering(¼) + Panicle(½)<br>
+<b>Diseases:</b> Blast (spray Tricyclazole 6g/10L) | BLB (spray Copper Oxychloride)<br>
+<b>Pests:</b> Stem Borer (Chlorpyrifos 2ml/L) | Brown Planthopper (Imidacloprid)<br>
+<b>Yield:</b> 20–30 qt/acre (improved varieties up to 40 qt/acre)<br>
+<b>Post-harvest:</b> Dry to 14% moisture before storage`
+    },
+    {
+      kw:["wheat","gehu","rabi","winter crop","wheat farming"],
+      a:`🌾 <b>Wheat Farming — Complete Guide</b><br><br>
+<b>Varieties:</b> HD-2967, HD-3086, PBW-343, DBW-187, Raj-4120<br>
+<b>Sowing Time:</b> Oct 25–Nov 25 (timely) | Dec (late sowing, use K-9107)<br>
+<b>Seed Rate:</b> 40–45 kg/acre for timely sowing<br>
+<b>Soil:</b> Well-drained loam or clay loam; pH 6.0–7.5<br>
+<b>Fertilizer:</b> 50 kg Urea + 25 kg DAP + 17 kg MOP per acre<br>&nbsp;&nbsp;Apply Urea in 3 splits: at sowing, 21 days, 42 days<br>
+<b>Irrigation:</b> 6 critical stages — CRI (21d), Tillering, Jointing, Flowering, Dough, Maturity<br>
+<b>Diseases:</b> Yellow Rust (Propiconazole 1ml/L) | Loose Smut (seed treatment with Vitavax)<br>
+<b>Harvest:</b> When grain moisture drops to 12–14%; use combine for large area<br>
+<b>Yield:</b> 18–22 qt/acre (improved varieties up to 28 qt/acre)`
+    },
+    {
+      kw:["maize","corn","makka","kharif maize"],
+      a:`🌽 <b>Maize / Corn Farming Guide</b><br><br>
+<b>Varieties:</b> DHM-117, HQPM-1 (QPM), P3401, DKC-9141<br>
+<b>Season:</b> Kharif (June–July) | Rabi (Oct–Nov in South India)<br>
+<b>Seed Rate:</b> 8 kg/acre | Spacing: 60×20 cm<br>
+<b>Soil:</b> Deep, well-drained loamy soil; pH 6.5–7.5<br>
+<b>Fertilizer:</b> 60 kg Urea + 30 kg DAP + 20 kg MOP per acre<br>
+<b>Irrigation:</b> Critical at knee-high, silking and grain fill stages<br>
+<b>Pests:</b> Fall Armyworm — spray Emamectin Benzoate 0.5g/L (major threat!)<br>
+<b>Disease:</b> Turcicum Blight — use resistant varieties<br>
+<b>Yield:</b> 25–35 qt/acre; QPM varieties have high protein value<br>
+<b>Use:</b> Food, animal feed, poultry, starch, ethanol`
+    },
+    {
+      kw:["soil","fertilizer","nutrient","compost","soil health","ph","organic matter"],
+      a:`🌱 <b>Soil Health & Fertilizer Guide</b><br><br>
+<b>Soil Testing:</b> Test every 2–3 years at KVK or Soil Health Card centre<br>
+<b>Ideal pH:</b> 6.0–7.5 for most crops<br>&nbsp;&nbsp;If pH < 6: Add lime (Calcium carbonate) 100–200 kg/acre<br>&nbsp;&nbsp;If pH > 8: Add Gypsum or Sulphur 20 kg/acre<br>
+<b>NPK for General Crops:</b> Nitrogen:Phosphorus:Potassium = 4:2:1 ratio<br>
+<b>Organic Inputs:</b><br>
+&nbsp;&nbsp;• FYM (Farm Yard Manure): 2–4 tonnes/acre every season<br>
+&nbsp;&nbsp;• Vermicompost: 400–600 kg/acre — best for vegetables<br>
+&nbsp;&nbsp;• Green Manure (Dhaincha): Fixes 80–100 kg N/ha<br>
+&nbsp;&nbsp;• Neem Cake: 100 kg/acre — controls soil pests too<br>
+<b>Micronutrients:</b> Zinc (ZnSO4 10 kg/acre), Boron, Iron for deficiency symptoms<br>
+<b>Signs of Deficiency:</b><br>
+&nbsp;&nbsp;• N deficiency: Yellow lower leaves<br>
+&nbsp;&nbsp;• P deficiency: Purple/reddish stems<br>
+&nbsp;&nbsp;• K deficiency: Scorched leaf edges<br>
+&nbsp;&nbsp;• Zn deficiency: Small leaves, white stripes`
+    },
+    {
+      kw:["pest","insect","disease","spray","fungal","weed","pesticide"],
+      a:`🐛 <b>Integrated Pest & Disease Management</b><br><br>
+<b>Preventive Measures:</b><br>
+&nbsp;&nbsp;• Crop rotation every season<br>
+&nbsp;&nbsp;• Use certified disease-free seeds<br>
+&nbsp;&nbsp;• Keep field bunds clean from weeds<br>
+<b>Bio-pesticides (Safe & Cheap):</b><br>
+&nbsp;&nbsp;• Neem oil 5ml + soap 2ml per litre — all sucking pests<br>
+&nbsp;&nbsp;• Trichoderma viride 4g/kg seed — soil-borne fungal diseases<br>
+&nbsp;&nbsp;• Beauveria bassiana — for thrips and whitefly<br>
+&nbsp;&nbsp;• Pheromone traps — for stem borer, fruit borer monitoring<br>
+<b>Chemical Sprays (Last Resort):</b><br>
+&nbsp;&nbsp;• Sucking pests: Imidacloprid 0.3ml/L or Thiamethoxam<br>
+&nbsp;&nbsp;• Chewing insects: Chlorpyrifos 2ml/L<br>
+&nbsp;&nbsp;• Fungal disease: Mancozeb 2g/L or Carbendazim 1g/L<br>
+&nbsp;&nbsp;• Bacterial: Copper Oxychloride 3g/L<br>
+<b>Weed Control:</b> Pendimethalin (pre-emergence) or manual weeding at 20–25 DAS<br>
+<b>Safety:</b> Always wear gloves, mask; spray in early morning or evening`
+    },
+    {
+      kw:["irrigation","water","drip","sprinkler","flood irrigation","water saving"],
+      a:`💧 <b>Irrigation Methods & Water Management</b><br><br>
+<b>Drip Irrigation:</b><br>
+&nbsp;&nbsp;• Saves 40–50% water vs flood irrigation<br>
+&nbsp;&nbsp;• Best for: sugarcane, cotton, vegetables, orchards<br>
+&nbsp;&nbsp;• Govt subsidy: 50–90% under PMKSY scheme<br>
+<b>Sprinkler Irrigation:</b><br>
+&nbsp;&nbsp;• Saves 25–30% water<br>
+&nbsp;&nbsp;• Best for: wheat, groundnut, soybean, pulses<br>
+&nbsp;&nbsp;• Subsidy available under PMKSY<br>
+<b>Flood Irrigation Tips:</b><br>
+&nbsp;&nbsp;• Irrigate in the evening to reduce evaporation<br>
+&nbsp;&nbsp;• Don't irrigate before expected rain (check forecast)<br>
+&nbsp;&nbsp;• Level field properly for uniform water distribution<br>
+<b>Water Conservation:</b><br>
+&nbsp;&nbsp;• Mulching with straw reduces evaporation by 30%<br>
+&nbsp;&nbsp;• Farm ponds to harvest rainwater<br>
+&nbsp;&nbsp;• Check soil moisture before irrigating (finger test)<br>
+<b>Apply for Drip Subsidy:</b> Visit nearest Agriculture Office or jalyukt-shivar.com`
+    },
+    {
+      kw:["cotton","kapas","bt cotton","cotton farming"],
+      a:`🏵️ <b>Cotton Farming Guide</b><br><br>
+<b>Varieties:</b> Bt Hybrid Cotton — RCH-2, NCS-145, MRC-7017<br>
+<b>Sowing Time:</b> April–June (Kharif) | Good pre-monsoon moisture needed<br>
+<b>Spacing:</b> 90×60 cm or 120×45 cm<br>
+<b>Fertilizer:</b> 80 kg Urea + 50 kg DAP + 35 kg MOP per acre<br>
+<b>Key Pests:</b><br>
+&nbsp;&nbsp;• Pink Bollworm — use pheromone traps + Emamectin spray<br>
+&nbsp;&nbsp;• Whitefly — Triazophos 2ml/L; avoid excess irrigation<br>
+&nbsp;&nbsp;• Mealybug — Profenofos 2ml/L<br>
+<b>Disease:</b> Root rot (avoid waterlogging) | Leaf curl (control whitefly)<br>
+<b>Water:</b> Sensitive to waterlogging — don't irrigate in excess<br>
+<b>Picking:</b> 3–5 rounds of picking; first boll opens ~150 days<br>
+<b>Yield:</b> 10–18 qt seed cotton/acre`
+    },
+    {
+      kw:["vegetable","tomato","onion","potato","capsicum","brinjal","vegetable farming"],
+      a:`🥦 <b>Vegetable Farming — Key Tips</b><br><br>
+<b>Tomato:</b><br>
+&nbsp;&nbsp;• Season: Sep–Oct (Rabi) / Jan–Feb (Summer)<br>
+&nbsp;&nbsp;• Spacing: 75×45 cm | Transplant 25–30 day old seedlings<br>
+&nbsp;&nbsp;• Staking required for tall varieties<br>
+&nbsp;&nbsp;• Common disease: Early Blight — spray Mancozeb 2g/L<br>
+<b>Onion:</b><br>
+&nbsp;&nbsp;• Rabi onion: Oct–Nov nursery | Transplant Dec<br>
+&nbsp;&nbsp;• Kharif onion: June nursery | Transplant Aug<br>
+&nbsp;&nbsp;• Apply Urea at 30 and 60 DAS<br>
+&nbsp;&nbsp;• Harvest when tops fall naturally<br>
+<b>Potato:</b><br>
+&nbsp;&nbsp;• Season: Oct–Nov (North India) | Jan–Feb (hills)<br>
+&nbsp;&nbsp;• Spacing: 60×15 cm; 10–12 cm deep planting<br>
+&nbsp;&nbsp;• Late Blight is major disease — spray Metalaxyl at first sign<br>
+<b>General Tips:</b><br>
+&nbsp;&nbsp;• Use drip + mulch for vegetables<br>
+&nbsp;&nbsp;• Apply micronutrients for quality produce<br>
+&nbsp;&nbsp;• Harvest in cool morning hours for better shelf life`
+    },
+    {
+      kw:["organic farming","jaivik","natural farming","zero budget","ZBNF"],
+      a:`🌿 <b>Organic / Natural Farming Guide</b><br><br>
+<b>Zero Budget Natural Farming (ZBNF):</b><br>
+&nbsp;&nbsp;• Jeevamrit: 10 kg cow dung + 10L cow urine + 2 kg jaggery + 2 kg flour + 50L water<br>&nbsp;&nbsp;Apply 200L/acre every 15 days<br>
+&nbsp;&nbsp;• Bijamrit: Seed treatment with cow dung + lime + water<br>
+&nbsp;&nbsp;• Mulching with crop residue or dry leaves<br>
+<b>Organic Certification:</b><br>
+&nbsp;&nbsp;• PGS-India (Participatory Guarantee System) — free, village level<br>
+&nbsp;&nbsp;• Third-party certification for export markets<br>
+<b>Compost Making:</b><br>
+&nbsp;&nbsp;• Layer crop residue + cow dung + soil in 3 ft deep pit<br>
+&nbsp;&nbsp;• Ready in 60–90 days; turn every 15 days<br>
+<b>Benefits:</b> Reduced input cost, healthy soil, premium price for organic produce<br>
+<b>Market:</b> Sell at organic mandis or through FPOs for 20–30% premium`
+    },
+    {
+      kw:["mango","orchard","fruit","banana","papaya","guava","fruit farming"],
+      a:`🥭 <b>Fruit Farming Guide</b><br><br>
+<b>Mango:</b><br>
+&nbsp;&nbsp;• Varieties: Alphonso, Dasheri, Langra, Kesar, Amrapali<br>
+&nbsp;&nbsp;• Plant in July–Aug (monsoon) | Spacing: 10×10 m<br>
+&nbsp;&nbsp;• Flowering in Dec–Feb; harvest May–July<br>
+&nbsp;&nbsp;• Apply 100g NPK/year/tree (increases with age)<br>
+&nbsp;&nbsp;• Common problem: Powdery mildew on flowers — spray Karathane<br>
+<b>Banana:</b><br>
+&nbsp;&nbsp;• Tissue culture plants give best yield (30–40 kg/plant)<br>
+&nbsp;&nbsp;• Spacing: 1.8×1.8 m | Drip irrigation mandatory<br>
+&nbsp;&nbsp;• Harvest in 10–12 months; use suckers for ratoon crop<br>
+<b>Papaya:</b><br>
+&nbsp;&nbsp;• Fast income — fruits in 8–10 months<br>
+&nbsp;&nbsp;• Spacing: 2×2 m | Mixed cropping possible<br>
+&nbsp;&nbsp;• Papaya Ring Spot Virus — major problem; use virus-free plants<br>
+<b>Market:</b> Link with FPO or APMC for better prices`
+    }
+  ],
+
+  health:[
+    {
+      kw:["fever","temperature","high fever","malaria","dengue","flu"],
+      a:`🌡️ <b>Fever — Diagnosis & Treatment</b><br><br>
+<b>Common Causes:</b> Malaria, Dengue, Typhoid, Viral flu, UTI<br>
+<b>Immediate Steps:</b><br>
+&nbsp;&nbsp;• Drink ORS / coconut water / plain water every hour<br>
+&nbsp;&nbsp;• Sponge forehead with lukewarm water cloth<br>
+&nbsp;&nbsp;• Take Paracetamol 500mg (adults) every 6 hours if >100°F<br>
+&nbsp;&nbsp;• Rest completely; avoid heavy work<br>
+<b>⚠️ Go to Doctor IMMEDIATELY if:</b><br>
+&nbsp;&nbsp;• Fever > 103°F (39.5°C)<br>
+&nbsp;&nbsp;• Lasts more than 3 days<br>
+&nbsp;&nbsp;• With rash, severe headache, vomiting, fits<br>
+&nbsp;&nbsp;• Child below 5 years has any fever<br>
+<b>Malaria Signs:</b> Shivering, sweating cycles, chills every 2–3 days → Get blood test<br>
+<b>Dengue Signs:</b> Severe body/eye pain, rash on body, platelet drop → Urgent hospital care<br>
+<b>Typhoid:</b> Continuous fever + stomach pain → Blood/Widal test needed<br>
+<b>Helpline:</b> 104 (Health Helpline, free)`
+    },
+    {
+      kw:["diarrhea","loose motion","stomach","vomit","cholera","dehydration"],
+      a:`💊 <b>Diarrhea & Dehydration — Complete Guide</b><br><br>
+<b>Most Important — ORS:</b><br>
+&nbsp;&nbsp;• Commercial ORS packet (Electral/Jeevan Jal) in 1 litre clean water<br>
+&nbsp;&nbsp;• Home ORS: 1L water + 6 tsp sugar + ½ tsp salt — stir well<br>
+&nbsp;&nbsp;• Give 200ml after every loose stool<br>
+<b>What to Eat:</b> Plain rice, khichdi, banana, curd rice, toast<br>
+<b>Avoid:</b> Oily food, spicy food, milk, raw vegetables, street food<br>
+<b>Children Under 5:</b><br>
+&nbsp;&nbsp;• Continue breastfeeding during diarrhea<br>
+&nbsp;&nbsp;• Zinc tablets (20mg/day for 14 days) reduces severity<br>
+&nbsp;&nbsp;• If child becomes very weak, sunken eyes → Emergency<br>
+<b>Signs of Severe Dehydration:</b><br>
+&nbsp;&nbsp;• No urine for 6+ hours | Sunken eyes | Dry mouth | Weakness<br>
+&nbsp;&nbsp;→ Rush to hospital for IV fluid immediately<br>
+<b>Prevention:</b><br>
+&nbsp;&nbsp;• Wash hands with soap before eating and after toilet<br>
+&nbsp;&nbsp;• Boil drinking water or use Aquatabs (chlorine tablets)<br>
+&nbsp;&nbsp;• Do not eat stale or uncovered food`
+    },
+    {
+      kw:["pregnancy","pregnant","delivery","maternal","antenatal","baby birth","garbh"],
+      a:`🤱 <b>Pregnancy & Maternal Health — Full Guide</b><br><br>
+<b>Register Early:</b> Visit PHC/Sub-Centre within 12 weeks of pregnancy<br>
+<b>4 ANC Checkups Schedule:</b><br>
+&nbsp;&nbsp;• 1st: Before 12 weeks (confirm pregnancy, blood test)<br>
+&nbsp;&nbsp;• 2nd: 14–26 weeks (ultrasound, BP check)<br>
+&nbsp;&nbsp;• 3rd: 28–34 weeks (position of baby)<br>
+&nbsp;&nbsp;• 4th: 36 weeks onwards (delivery planning)<br>
+<b>Daily Supplements (Free at PHC):</b><br>
+&nbsp;&nbsp;• Iron & Folic Acid (IFA) tablets — start from 12 weeks<br>
+&nbsp;&nbsp;• Calcium tablets — from 2nd trimester<br>
+&nbsp;&nbsp;• Vitamin D as advised<br>
+<b>Vaccinations:</b> TT-1 at any time; TT-2 after 4 weeks of TT-1<br>
+<b>Danger Signs → Rush to Hospital:</b><br>
+&nbsp;&nbsp;• Heavy bleeding | Fits/seizures | Severe headache<br>
+&nbsp;&nbsp;• Baby not moving for 12 hours | High BP<br>
+<b>Government Benefits:</b><br>
+&nbsp;&nbsp;• Janani Suraksha Yojana (JSY): ₹1400 cash for institutional delivery<br>
+&nbsp;&nbsp;• PMSMA: Free checkup on 9th of every month at govt hospitals<br>
+&nbsp;&nbsp;• Free ambulance: Call 108<br>
+<b>After Birth:</b> Breastfeed within 1 hour | Give colostrum (first yellow milk) | Exclusive breastfeed 6 months`
+    },
+    {
+      kw:["snakebite","snake bite","snake","viper","cobra","krait"],
+      a:`🐍 <b>Snakebite — EMERGENCY First Aid</b><br><br>
+<b>WHAT TO DO:</b><br>
+&nbsp;&nbsp;✅ Keep the person CALM — panic increases venom spread<br>
+&nbsp;&nbsp;✅ Immobilize the bitten limb with a splint/stick<br>
+&nbsp;&nbsp;✅ Keep bitten limb BELOW heart level<br>
+&nbsp;&nbsp;✅ Remove rings, watches, tight clothing near bite<br>
+&nbsp;&nbsp;✅ Mark the time of bite with pen on skin<br>
+&nbsp;&nbsp;✅ Rush to NEAREST HOSPITAL IMMEDIATELY<br>
+&nbsp;&nbsp;✅ Call 108 ambulance<br><br>
+<b>⛔ WHAT NOT TO DO (causes more harm):</b><br>
+&nbsp;&nbsp;❌ Do NOT cut the wound or suck the venom<br>
+&nbsp;&nbsp;❌ Do NOT tie a tourniquet or tight bandage<br>
+&nbsp;&nbsp;❌ Do NOT apply herbs, mud, or fire on wound<br>
+&nbsp;&nbsp;❌ Do NOT give food, water, or alcohol<br>
+&nbsp;&nbsp;❌ Do NOT apply ice on wound<br><br>
+<b>Anti-Snake Venom (ASV):</b><br>
+&nbsp;&nbsp;• Available FREE at all government hospitals<br>
+&nbsp;&nbsp;• Must be given within 4–6 hours for best effect<br>
+<b>Remember:</b> 70% of Indian snakebites are from non-venomous snakes. Still go to hospital!`
+    },
+    {
+      kw:["first aid","wound","cut","bleeding","burn","fracture","accident","injury"],
+      a:`🩹 <b>First Aid Guide — Common Emergencies</b><br><br>
+<b>Deep Cuts & Bleeding:</b><br>
+&nbsp;&nbsp;• Apply firm pressure with clean cloth for 10 minutes<br>
+&nbsp;&nbsp;• Raise injured part above heart level<br>
+&nbsp;&nbsp;• Clean wound with clean water (not spirit initially)<br>
+&nbsp;&nbsp;• Apply antiseptic cream; bandage properly<br>
+&nbsp;&nbsp;• If deep/gaping wound — needs stitching at hospital<br>
+<b>Burns:</b><br>
+&nbsp;&nbsp;• Run COOL (not ice cold) water for 10–20 minutes<br>
+&nbsp;&nbsp;• Remove jewellery/clothes from burn area (if not stuck)<br>
+&nbsp;&nbsp;• Cover with clean cloth; do NOT apply oil, toothpaste, or butter<br>
+&nbsp;&nbsp;• Burns > size of palm or on face/hands → Hospital immediately<br>
+<b>Fractures / Broken Bone:</b><br>
+&nbsp;&nbsp;• Do NOT try to straighten the bone<br>
+&nbsp;&nbsp;• Immobilize with stick/splint on both sides<br>
+&nbsp;&nbsp;• Support with cloth/bandage; handle gently<br>
+<b>Unconscious Person:</b><br>
+&nbsp;&nbsp;• Check breathing (watch chest rise)<br>
+&nbsp;&nbsp;• Place in recovery position (on side)<br>
+&nbsp;&nbsp;• If not breathing — start CPR<br>
+<b>CPR (Basic):</b> 30 chest compressions (hard & fast) + 2 rescue breaths; repeat<br>
+<b>Choking:</b> 5 back blows + 5 abdominal thrusts (Heimlich maneuver)`
+    },
+    {
+      kw:["malnutrition","child nutrition","underweight","stunting","saam","anemia"],
+      a:`👶 <b>Child Nutrition & Malnutrition</b><br><br>
+<b>Signs of Malnutrition:</b><br>
+&nbsp;&nbsp;• Very thin arms (MUAC < 11.5 cm in children)<br>
+&nbsp;&nbsp;• Swollen legs/feet<br>
+&nbsp;&nbsp;• Hair falling or turning orange<br>
+&nbsp;&nbsp;• Not growing in height or weight<br>
+<b>What to Feed (6–24 months):</b><br>
+&nbsp;&nbsp;• Thick khichdi with dal, vegetables, ghee<br>
+&nbsp;&nbsp;• Mashed banana, boiled egg, mashed potato<br>
+&nbsp;&nbsp;• Give 5–6 times/day in small amounts<br>
+<b>Government Programs (FREE):</b><br>
+&nbsp;&nbsp;• ICDS/Anganwadi: Supplementary nutrition, growth monitoring<br>
+&nbsp;&nbsp;• NRC (Nutrition Rehabilitation Centre): For severe malnutrition<br>
+&nbsp;&nbsp;• POSHAN Abhiyan: Monthly growth monitoring at Anganwadi<br>
+<b>Anemia Prevention:</b><br>
+&nbsp;&nbsp;• Iron-rich foods: Jaggery, green leafy vegetables, dates, meat<br>
+&nbsp;&nbsp;• Weekly IFA (Iron Folic Acid) syrup for children 6 months–5 years (free at AWC)<br>
+<b>Contact:</b> Your nearest Anganwadi worker or ASHA for free support`
+    },
+    {
+      kw:["diabetes","sugar","blood sugar","insulin","madhumeh"],
+      a:`🩺 <b>Diabetes (Sugar Disease) — Management</b><br><br>
+<b>Symptoms to Watch:</b><br>
+&nbsp;&nbsp;• Frequent urination, excessive thirst<br>
+&nbsp;&nbsp;• Blurred vision, slow healing wounds<br>
+&nbsp;&nbsp;• Unexplained weight loss or tiredness<br>
+<b>Diet Rules for Diabetics:</b><br>
+&nbsp;&nbsp;• ✅ Eat: Whole grains (millet, brown rice), green vegetables, dal, curd<br>
+&nbsp;&nbsp;• ❌ Avoid: White rice/bread in excess, sweets, fruit juices, fried food<br>
+&nbsp;&nbsp;• Eat small meals every 3–4 hours; never skip breakfast<br>
+<b>Exercise:</b> 30-min walk daily reduces blood sugar significantly<br>
+<b>Foot Care:</b> Check feet daily; small wounds must be treated immediately<br>
+<b>Medicines:</b> Never stop medication without doctor advice<br>
+<b>Government Support:</b><br>
+&nbsp;&nbsp;• Free medicines at Jan Aushadhi Kendras (80% cheaper)<br>
+&nbsp;&nbsp;• Free blood sugar testing at PHC/CHC<br>
+<b>Target BP:</b> < 130/80 mmHg | Target Sugar: Fasting < 130 mg/dL`
+    },
+    {
+      kw:["mental health","depression","stress","anxiety","suicide","tension","mansik"],
+      a:`🧠 <b>Mental Health — You Are Not Alone</b><br><br>
+<b>Common Signs of Depression/Anxiety:</b><br>
+&nbsp;&nbsp;• Feeling sad or empty for weeks<br>
+&nbsp;&nbsp;• Loss of interest in daily activities<br>
+&nbsp;&nbsp;• Sleeping too much or too little<br>
+&nbsp;&nbsp;• Feeling worthless or hopeless<br>
+&nbsp;&nbsp;• Difficulty concentrating<br>
+<b>What Helps:</b><br>
+&nbsp;&nbsp;• Talk to a trusted family member or friend<br>
+&nbsp;&nbsp;• Regular physical activity and sunlight<br>
+&nbsp;&nbsp;• Maintain daily routine — wake, eat, sleep at regular times<br>
+&nbsp;&nbsp;• Reduce alcohol use completely<br>
+<b>If someone talks about harming themselves:</b><br>
+&nbsp;&nbsp;• Stay with them; listen without judgment<br>
+&nbsp;&nbsp;• Remove access to dangerous items<br>
+&nbsp;&nbsp;• Call iCall: <b>9152987821</b> (Mon–Sat, 8am–10pm)<br>
+&nbsp;&nbsp;• NIMHANS Helpline: <b>080-46110007</b><br>
+&nbsp;&nbsp;• Vandrevala Foundation: <b>1860-2662-345</b> (24/7 free)<br>
+<b>Remember:</b> Mental illness is a health condition, not a personal weakness. Seek help early.`
+    }
+  ],
+
+  weather:[
+    {
+      kw:["rain","monsoon","rainfall","flood","water logging"],
+      a:`🌧️ <b>Monsoon & Flood Preparedness</b><br><br>
+<b>Before Monsoon:</b><br>
+&nbsp;&nbsp;• Clean drainage channels around your field and home<br>
+&nbsp;&nbsp;• Store 15 days food, clean water (10L/person), medicines<br>
+&nbsp;&nbsp;• Repair roof, walls, and cattle shed<br>
+&nbsp;&nbsp;• Note nearest high ground / relief camp location<br>
+<b>During Heavy Rain / Flood:</b><br>
+&nbsp;&nbsp;• Move to higher ground immediately if water enters home<br>
+&nbsp;&nbsp;• Do NOT cross flooded roads, rivers, or streams<br>
+&nbsp;&nbsp;• Keep children and elderly away from water<br>
+&nbsp;&nbsp;• Turn off gas cylinders and electrical mains<br>
+&nbsp;&nbsp;• Drink only boiled/filtered/bottled water<br>
+<b>After Flood:</b><br>
+&nbsp;&nbsp;• Do not eat food that has been in floodwater<br>
+&nbsp;&nbsp;• Bleach home surfaces to prevent disease<br>
+&nbsp;&nbsp;• Watch for snakes that may enter homes after flooding<br>
+<b>For Farmers:</b><br>
+&nbsp;&nbsp;• File crop loss claim within 72 hours of damage<br>
+&nbsp;&nbsp;• PMFBY insurance claim: Contact insurance company or banker<br>
+<b>Emergency: NDRF Helpline 1078 | Ambulance 108`
+    },
+    {
+      kw:["drought","dry","water shortage","heat wave","garmi","heatstroke"],
+      a:`☀️ <b>Drought & Heat Wave Survival Guide</b><br><br>
+<b>Personal Safety in Heat Wave:</b><br>
+&nbsp;&nbsp;• Drink 3–4 litres of water/day; add ORS if sweating heavily<br>
+&nbsp;&nbsp;• Avoid going out between 12 PM – 4 PM<br>
+&nbsp;&nbsp;• Wear light-coloured, loose cotton clothes<br>
+&nbsp;&nbsp;• Eat light meals; avoid heavy, oily food<br>
+<b>Heatstroke Signs (Emergency!):</b><br>
+&nbsp;&nbsp;• Body temp > 40°C, confusion, not sweating, unconscious<br>
+&nbsp;&nbsp;• ACTION: Move to shade, cool with wet cloth, rush to hospital<br>
+<b>For Animals:</b><br>
+&nbsp;&nbsp;• Provide shade and water continuously<br>
+&nbsp;&nbsp;• Reduce work hours for bullocks<br>
+<b>Drought-Resistant Crops:</b><br>
+&nbsp;&nbsp;• Bajra, Jowar, Moth Bean, Cowpea, Cluster Bean<br>
+&nbsp;&nbsp;• Castor, Sesame, Groundnut (short-duration varieties)<br>
+<b>Water Conservation:</b><br>
+&nbsp;&nbsp;• Mulching reduces soil moisture loss by 30–40%<br>
+&nbsp;&nbsp;• Farm ponds for rainwater storage<br>
+&nbsp;&nbsp;• Switch to drip irrigation (50% water saving)<br>
+<b>Govt Relief:</b> Report crop loss to Patwari/Tehsildar for drought relief compensation`
+    },
+    {
+      kw:["weather","forecast","temperature","season","climate","barish kab"],
+      a:`🌤️ <b>Weather Advisory for Farmers</b><br><br>
+<b>Free Weather Apps/Services:</b><br>
+&nbsp;&nbsp;• <b>Meghdoot App</b> — village-level 5-day forecast for farmers (offline capable)<br>
+&nbsp;&nbsp;• <b>Kisan Suvidha App</b> — weather + crop advisory + market prices<br>
+&nbsp;&nbsp;• <b>Damini App</b> — lightning alerts (very useful!)<br>
+&nbsp;&nbsp;• SMS service: Send your pin code to 7738299899 (IMD)<br>
+<b>Seasonal Calendar:</b><br>
+&nbsp;&nbsp;• Kharif sowing: June 15–July 15 (after 1st good monsoon rain)<br>
+&nbsp;&nbsp;• Rabi sowing: Oct 15–Nov 30<br>
+&nbsp;&nbsp;• Zaid season: Feb–May (short-duration crops)<br>
+<b>Farming Weather Rules:</b><br>
+&nbsp;&nbsp;• Don't spray pesticides if rain expected in 24 hours<br>
+&nbsp;&nbsp;• Plant on cloudy days to reduce transplant shock<br>
+&nbsp;&nbsp;• Harvest before predicted rain to avoid crop damage<br>
+&nbsp;&nbsp;• Wind > 40 km/h — support standing crops with stakes<br>
+<b>IMD Helpline:</b> 1800-180-1717 (free weather inquiry)`
+    },
+    {
+      kw:["lightning","thunder","bijali","storm","cyclone","hailstorm","ola"],
+      a:`⚡ <b>Lightning & Storm Safety</b><br><br>
+<b>During Lightning / Thunderstorm:</b><br>
+&nbsp;&nbsp;• Go indoors or into a hard-top vehicle immediately<br>
+&nbsp;&nbsp;• Stay away from tall trees, poles, metal fences<br>
+&nbsp;&nbsp;• Do NOT stand in open fields or on rooftops<br>
+&nbsp;&nbsp;• Unplug electrical appliances<br>
+&nbsp;&nbsp;• Do NOT use mobile phone outdoors during storm<br>
+<b>If caught in open field:</b><br>
+&nbsp;&nbsp;• Squat low on balls of feet — minimise contact with ground<br>
+&nbsp;&nbsp;• Do NOT lie flat on ground<br>
+&nbsp;&nbsp;• Stay at least 100 metres from tall trees<br>
+<b>If Someone is Struck by Lightning:</b><br>
+&nbsp;&nbsp;• It is SAFE to touch them — they are not electrically charged<br>
+&nbsp;&nbsp;• Start CPR immediately if unconscious<br>
+&nbsp;&nbsp;• Call 108 ambulance<br>
+<b>For Cyclone:</b><br>
+&nbsp;&nbsp;• Listen to IMD alerts; evacuate if ordered<br>
+&nbsp;&nbsp;• Store water, food, torch, medicines<br>
+&nbsp;&nbsp;• Stay in strongest part of building`
+    }
+  ],
+
+  government:[
+    {
+      kw:["pm kisan","pmkisan","kisan samman","6000","farmer payment","installment"],
+      a:`🏛️ <b>PM-KISAN Samman Nidhi — Complete Guide</b><br><br>
+<b>Benefit:</b> ₹6,000/year in 3 installments of ₹2,000 each<br>
+<b>Who can apply:</b> All small & marginal farmers with cultivable land<br>
+<b>Not Eligible:</b> Government employees, taxpayers, professionals (doctors, lawyers)<br>
+<b>Documents Needed:</b><br>
+&nbsp;&nbsp;• Aadhaar card (mandatory)<br>
+&nbsp;&nbsp;• Bank account linked to Aadhaar<br>
+&nbsp;&nbsp;• Land records (Khasra/Khatauni)<br>
+&nbsp;&nbsp;• Mobile number<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;1. Visit pmkisan.gov.in → New Farmer Registration<br>
+&nbsp;&nbsp;2. OR go to nearest CSC (Common Service Centre)<br>
+&nbsp;&nbsp;3. OR contact Patwari / Agriculture Officer<br>
+<b>Check Payment Status:</b><br>
+&nbsp;&nbsp;• pmkisan.gov.in → Beneficiary Status<br>
+&nbsp;&nbsp;• SMS: PM-KISAN REG to 155261<br>
+<b>Helpline:</b> 155261 | 011-24300606 (Mon–Fri, 9am–6pm)<br>
+<b>eKYC:</b> Must do eKYC at CSC or pmkisan.gov.in to continue getting payments`
+    },
+    {
+      kw:["ayushman","pmjay","health card","golden card","free hospital","5 lakh","free treatment"],
+      a:`🏥 <b>Ayushman Bharat PMJAY — Health Insurance</b><br><br>
+<b>Benefit:</b> FREE health cover up to ₹5 lakh per family per year<br>
+<b>Covers:</b> Hospitalization, surgery, ICU, medicines, diagnostics (1500+ procedures)<br>
+<b>Who is Eligible:</b> SECC-2011 listed families + State-added beneficiaries<br>
+<b>Check Eligibility:</b><br>
+&nbsp;&nbsp;• Visit mera.pmjay.gov.in<br>
+&nbsp;&nbsp;• Call 14555 (free helpline)<br>
+&nbsp;&nbsp;• Visit nearest Ayushman Mitra at empanelled hospital<br>
+<b>Get Ayushman Card:</b><br>
+&nbsp;&nbsp;• Visit nearest CSC or empanelled hospital<br>
+&nbsp;&nbsp;• Need: Aadhaar + Mobile number<br>
+&nbsp;&nbsp;• Card is FREE to make<br>
+<b>How to Avail Treatment:</b><br>
+&nbsp;&nbsp;1. Show Ayushman card at empanelled hospital<br>
+&nbsp;&nbsp;2. Cashless treatment — NO advance payment needed<br>
+&nbsp;&nbsp;3. Works at 25,000+ hospitals across India<br>
+<b>Ab Har Ghar Ayushman:</b> Now covers all citizens above 70 years<br>
+<b>Helpline:</b> 14555 | 1800-111-565 (24x7 free)`
+    },
+    {
+      kw:["ration","food","pds","ration card","anna","free grain","nfsa"],
+      a:`🌾 <b>Public Distribution System (Ration) Guide</b><br><br>
+<b>PMGKAY (Free Grain):</b> 5 kg free grain per person/month (rice/wheat)<br>
+<b>NFSA Subsidized Grain:</b> BPL families — 5 kg/person at ₹1–3/kg<br>
+<b>Ration Card Types:</b><br>
+&nbsp;&nbsp;• Antyodaya (AAY) — Poorest of poor: 35 kg/month/family<br>
+&nbsp;&nbsp;• Priority (PHH) — BPL: 5 kg/person/month<br>
+&nbsp;&nbsp;• Above Poverty Line (APL) — subsidized rates<br>
+<b>One Nation One Ration Card (ONORC):</b><br>
+&nbsp;&nbsp;• Use your ration card in ANY state in India<br>
+&nbsp;&nbsp;• No need to transfer card when migrating for work<br>
+<b>Apply for New Ration Card:</b><br>
+&nbsp;&nbsp;• Visit District Supply Office or State Food portal<br>
+&nbsp;&nbsp;• Documents: Aadhaar, photo, income proof, residence proof<br>
+<b>How to Collect Ration:</b><br>
+&nbsp;&nbsp;• Go to assigned Fair Price Shop (FPS/Ration Shop)<br>
+&nbsp;&nbsp;• Biometric authentication with Aadhaar at e-POS machine<br>
+<b>Complaint:</b> Call 1800-180-1007 (toll free) or report on nfsa.gov.in`
+    },
+    {
+      kw:["kcc","kisan credit card","farmer loan","crop loan","bank loan","interest subsidy"],
+      a:`🏦 <b>Kisan Credit Card (KCC) — Farmer Loan</b><br><br>
+<b>Benefit:</b> Revolving credit for farming at only <b>4% effective interest</b> (with 3% subvention)<br>
+<b>Credit Limit:</b> Based on landholding + crop scale of finance<br>&nbsp;&nbsp;(Typically ₹1.6 lakh for 1 acre rice/wheat)<br>
+<b>Who can apply:</b> All farmers, tenant farmers, sharecroppers, SHG members<br>
+<b>Documents:</b><br>
+&nbsp;&nbsp;• Aadhaar + PAN card<br>
+&nbsp;&nbsp;• Land records (Khasra / Khatauni)<br>
+&nbsp;&nbsp;• Passport photo<br>
+&nbsp;&nbsp;• Bank account<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit nearest nationalized bank branch (SBI, PNB, Canara, etc.)<br>
+&nbsp;&nbsp;• OR apply online on bank's website / PM-KISAN portal<br>
+<b>Validity:</b> 5 years with annual renewal<br>
+<b>Additional Benefits:</b><br>
+&nbsp;&nbsp;• Automatic crop insurance under PMFBY<br>
+&nbsp;&nbsp;• Personal accident cover ₹50,000<br>
+&nbsp;&nbsp;• Can use as ATM card for withdrawals<br>
+<b>Kisan Helpline:</b> 1800-180-1551 (free)`
+    },
+    {
+      kw:["pmfby","crop insurance","fasal bima","crop loss claim"],
+      a:`🌾 <b>PM Fasal Bima Yojana (PMFBY) — Crop Insurance</b><br><br>
+<b>What it covers:</b> Crop loss due to drought, flood, pest, disease, hailstorm<br>
+<b>Premium (Very Low):</b><br>
+&nbsp;&nbsp;• Kharif crops: 2% of Sum Insured<br>
+&nbsp;&nbsp;• Rabi crops: 1.5% of Sum Insured<br>
+&nbsp;&nbsp;• Horticulture: 5% of Sum Insured<br>
+<b>How to Enroll:</b><br>
+&nbsp;&nbsp;• KCC farmers: Auto-enrolled (may opt-out if desired)<br>
+&nbsp;&nbsp;• Non-KCC: Apply at bank, CSC, or pmfby.gov.in<br>
+&nbsp;&nbsp;• Deadline: 15 days before sowing cutoff date<br>
+<b>How to Claim:</b><br>
+&nbsp;&nbsp;1. Intimate loss to insurance company within 72 hours of damage<br>
+&nbsp;&nbsp;2. Call crop loss helpline: 14447<br>
+&nbsp;&nbsp;3. OR notify through bank or CSC<br>
+&nbsp;&nbsp;4. Or SMS crop loss details to registered mobile<br>
+<b>Claim Processing:</b> Within 30 days of harvest; directly to bank account<br>
+<b>Mid-Season Calamity:</b> 25% advance payment given immediately<br>
+<b>Helpline:</b> 14447 | pmfby.gov.in`
+    },
+    {
+      kw:["mgnrega","nrega","mahatma gandhi","job card","100 days work","mnrega"],
+      a:`🏗️ <b>MGNREGA — 100 Days Work Guarantee</b><br><br>
+<b>What it is:</b> Legal guarantee of 100 days paid work per household per year<br>
+<b>Wage:</b> State-wise wage (₹220–₹357/day); paid directly to bank/PO account<br>
+<b>Who can apply:</b> Any adult rural household member (willing to do unskilled work)<br>
+<b>How to Register:</b><br>
+&nbsp;&nbsp;• Visit Gram Panchayat with Aadhaar + photo<br>
+&nbsp;&nbsp;• Get Job Card (free, within 15 days of application)<br>
+<b>How to Get Work:</b><br>
+&nbsp;&nbsp;• Write application to Gram Panchayat requesting work<br>
+&nbsp;&nbsp;• Work must be provided within 15 days or unemployment allowance paid<br>
+<b>Type of Work:</b> Water conservation, road construction, planting trees, farm ponds, etc.<br>
+<b>Check Work & Payment:</b><br>
+&nbsp;&nbsp;• nrega.nic.in → Enter state → district → Gram Panchayat<br>
+&nbsp;&nbsp;• NREGASoft App<br>
+<b>Complaint:</b> Gram Sabha or State Ombudsman<br>
+<b>Helpline:</b> 1800-111-555 (free)`
+    },
+    {
+      kw:["pm awas","housing","pmay","pucca house","home","gramin","awas yojana"],
+      a:`🏠 <b>PM Awas Yojana Gramin (PMAY-G)</b><br><br>
+<b>Benefit:</b> ₹1.20 lakh (plains) / ₹1.30 lakh (hills/NE) for building pucca house<br>
+<b>Plus:</b> 90 days MGNREGA wages for construction labour<br>
+<b>Plus:</b> Swachh Bharat Mission toilet grant ₹12,000<br>
+<b>Who is Eligible:</b> SECC-2011 listed homeless or kutcha house families<br>
+<b>Payment:</b> Directly to bank in 3–4 instalments linked to construction progress<br>
+<b>How to Check:</b><br>
+&nbsp;&nbsp;• pmayg.nic.in → Beneficiary Search<br>
+&nbsp;&nbsp;• Or visit Gram Panchayat<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Through Gram Panchayat / Block Development Office<br>
+&nbsp;&nbsp;• Beneficiaries selected from SECC list by Gram Sabha<br>
+<b>Helpline:</b> 1800-116-446 (free)`
+    },
+    {
+      kw:["ujjwala","lpg","gas connection","free gas","cooking gas","cylinder"],
+      a:`🔥 <b>PM Ujjwala Yojana — Free LPG Connection</b><br><br>
+<b>Benefit:</b> Free LPG connection + first cylinder free + stove (for BPL families)<br>
+<b>Who is Eligible:</b><br>
+&nbsp;&nbsp;• BPL, SECC-2011, SC/ST, PM Awas beneficiaries<br>
+&nbsp;&nbsp;• Women above 18 years only (in her name)<br>
+<b>Documents:</b><br>
+&nbsp;&nbsp;• Aadhaar card<br>
+&nbsp;&nbsp;• BPL ration card / SECC proof<br>
+&nbsp;&nbsp;• Bank passbook<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit nearest LPG distributor (HP Gas, Indane, Bharat Gas)<br>
+&nbsp;&nbsp;• Fill KYC-3 form (free)<br>
+&nbsp;&nbsp;• Or apply online at pmuy.gov.in<br>
+<b>Subsidy on Refills:</b><br>
+&nbsp;&nbsp;• 12 subsidized cylinders per year via DBT to bank account<br>
+&nbsp;&nbsp;• Check subsidy status: mylpg.in<br>
+<b>Helpline:</b> 1800-233-3555 (HP Gas) | 1800-180-3333 (Bharat Gas)`
+    }
+  ],
+
+  education:[
+    {
+      kw:["scholarship","study","school fees","student","student scholarship","chhatravritti"],
+      a:`📚 <b>Student Scholarships — Complete List</b><br><br>
+<b>1. National Means-cum-Merit Scholarship (NMMS):</b><br>
+&nbsp;&nbsp;• ₹12,000/year for Class 9–12<br>
+&nbsp;&nbsp;• For govt school students; family income < ₹3.5 lakh/year<br>
+&nbsp;&nbsp;• Apply through State Scholarship Portal<br>
+<b>2. Pre-Matric Scholarship (Class 1–10):</b><br>
+&nbsp;&nbsp;• For SC/ST/OBC/Minority students<br>
+&nbsp;&nbsp;• Amount: ₹150–₹350/month + ₹750 one-time grant<br>
+<b>3. Post-Matric Scholarship (Class 11 onwards):</b><br>
+&nbsp;&nbsp;• Full tuition fees + maintenance allowance<br>
+&nbsp;&nbsp;• For SC (Ministry of Social Justice) / ST (Ministry of Tribal) / OBC / Minority<br>
+<b>4. Begum Hazrat Mahal (Minority Girls):</b><br>
+&nbsp;&nbsp;• ₹5,000–₹6,000/year for Class 9–12<br>
+<b>5. PM Scholarship for Wards of Ex-Servicemen:</b><br>
+&nbsp;&nbsp;• ₹2,500–₹3,000/month for technical education<br>
+<b>Apply at:</b> scholarships.gov.in (National Scholarship Portal)<br>
+<b>Deadline:</b> Sep–Oct each year (check exact dates)<br>
+<b>Documents:</b> Marksheet, caste/income certificate, Aadhaar, bank account<br>
+<b>Helpline:</b> 0120-6619540`
+    },
+    {
+      kw:["literacy","read","write","learn","adult education","ULLAS","padna","likhna"],
+      a:`📖 <b>Adult Literacy & ULLAS Program</b><br><br>
+<b>ULLAS (New India Literacy Program):</b><br>
+&nbsp;&nbsp;• FREE education for adults 15 years and above<br>
+&nbsp;&nbsp;• Goal: Make 5 crore people literate by 2027<br>
+&nbsp;&nbsp;• Covers: Reading, writing, numeracy, digital skills, financial literacy<br>
+<b>How to Join:</b><br>
+&nbsp;&nbsp;• Visit nearest primary school or Gram Panchayat<br>
+&nbsp;&nbsp;• Contact headmaster or ASHA/Anganwadi worker<br>
+&nbsp;&nbsp;• No age limit, no fees, no exams to join<br>
+<b>Classes:</b> Morning or evening sessions at local school (flexible timing)<br>
+<b>Materials:</b> Free books in regional languages (provided by government)<br>
+<b>Volunteer Teachers:</b> School students teach adults in their community<br>
+<b>Digital Literacy:</b><br>
+&nbsp;&nbsp;• PMGDISHA: Free digital training (internet, phone, UPI, email)<br>
+&nbsp;&nbsp;• 3 months course at nearest CSC<br>
+&nbsp;&nbsp;• pmgdisha.in to find nearest centre<br>
+<b>Helpline:</b> 1800-180-9588`
+    },
+    {
+      kw:["skill","training","vocational","ITI","pradhan mantri kaushal","job skills"],
+      a:`🔧 <b>Skill Development & Vocational Training</b><br><br>
+<b>PMKVY (PM Kaushal Vikas Yojana):</b><br>
+&nbsp;&nbsp;• FREE short-term skill training (3 weeks to 3 months)<br>
+&nbsp;&nbsp;• 300+ courses: Electrician, Plumber, Beautician, Solar Tech, Tailoring, IT, etc.<br>
+&nbsp;&nbsp;• After training: Certificate + ₹8,000 reward + job placement help<br>
+&nbsp;&nbsp;• Find centre: skillindiadigital.gov.in<br>
+<b>ITI (Industrial Training Institutes):</b><br>
+&nbsp;&nbsp;• 1–2 year trade certificate courses<br>
+&nbsp;&nbsp;• Trades: Fitter, Turner, Welder, Electrician, Mechanic<br>
+&nbsp;&nbsp;• Admission: Class 8/10 pass; apply through state portal in June–July<br>
+<b>RSETI (Rural Self Employment Training):</b><br>
+&nbsp;&nbsp;• 100+ free courses for rural youth<br>
+&nbsp;&nbsp;• Focus on self-employment: Agro-based, livestock, trade<br>
+&nbsp;&nbsp;• Available at all districts; run by banks<br>
+<b>PMEGP:</b> Up to 25% subsidy on self-employment projects<br>
+<b>Helpline:</b> Skill India: 1800-123-9626 (free)`
+    },
+    {
+      kw:["mid day meal","school meal","poshan","mid-day","mdm"],
+      a:`🍱 <b>Mid-Day Meal / PM POSHAN Scheme</b><br><br>
+<b>What it is:</b> FREE cooked meal every school day for students in Govt schools<br>
+<b>Who gets it:</b> All children in Class 1–8 in government & aided schools<br>
+<b>Meal Content (per child per day):</b><br>
+&nbsp;&nbsp;• Primary (Class 1–5): 450 calories + 12g protein<br>
+&nbsp;&nbsp;• Upper Primary (Class 6–8): 700 calories + 20g protein<br>
+&nbsp;&nbsp;• Includes: Rice/Chapati, Dal, Vegetables, eggs/milk (in many states)<br>
+<b>Why Important:</b><br>
+&nbsp;&nbsp;• Improves school attendance significantly<br>
+&nbsp;&nbsp;• Fights malnutrition and anemia in children<br>
+&nbsp;&nbsp;• Free for all — no separate registration needed<br>
+<b>If not provided at school:</b> Complain to Block Education Officer or call helpline<br>
+<b>National Helpline:</b> 1800-180-8004`
+    }
+  ],
+
+  livestock:[
+    {
+      kw:["cow","cattle","buffalo","dairy","milk","pashu","gai","bhains"],
+      a:`🐄 <b>Cattle & Buffalo Farming Guide</b><br><br>
+<b>High-Yield Breeds:</b><br>
+&nbsp;&nbsp;• Cows: HF (Holstein Friesian), Jersey, Gir, Sahiwal<br>
+&nbsp;&nbsp;• Buffaloes: Murrah, Surti, Jaffarabadi<br>
+&nbsp;&nbsp;• Hybrid cows: HF×Sahiwal cross — best for small farmers<br>
+<b>Feeding (per animal per day):</b><br>
+&nbsp;&nbsp;• Dry fodder: 5–10 kg (straw/silage)<br>
+&nbsp;&nbsp;• Green fodder: 15–20 kg (Napier grass, maize, bajra)<br>
+&nbsp;&nbsp;• Concentrate: 1–1.5 kg per 2.5 litre milk produced<br>
+&nbsp;&nbsp;• Clean water: 40–60 litres/day<br>
+&nbsp;&nbsp;• Mineral mixture: 50g/day (prevents milk fever, reproductive issues)<br>
+<b>Vaccination Schedule (Mandatory):</b><br>
+&nbsp;&nbsp;• FMD (Foot & Mouth Disease): Every 6 months (FREE by govt)<br>
+&nbsp;&nbsp;• HS (Hemorrhagic Septicemia): Before monsoon every year<br>
+&nbsp;&nbsp;• BQ (Black Quarter): Annually before monsoon<br>
+&nbsp;&nbsp;• Brucellosis: Calves 4–8 months (once in lifetime)<br>
+<b>Deworming:</b> Every 6 months with Albendazole (10mg/kg body weight)<br>
+<b>Housing:</b> Clean shed, 40 sq ft/animal, proper drainage, no dampness<br>
+<b>Helpline:</b> 1962 (Pashu Helpline, free 24×7)`
+    },
+    {
+      kw:["goat","bakri","sheep","sheep farming","goat rearing","small ruminant"],
+      a:`🐐 <b>Goat & Sheep Farming Guide</b><br><br>
+<b>Popular Breeds:</b><br>
+&nbsp;&nbsp;• Goat (Meat): Boer, Sirohi, Barbari, Osmanabadi<br>
+&nbsp;&nbsp;• Goat (Milk): Jamunapari, Beetal<br>
+&nbsp;&nbsp;• Sheep (Wool): Merino, Chokla | Sheep (Meat): Nellore, Deccani<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Pasture grazing 6–8 hours/day<br>
+&nbsp;&nbsp;• Supplement with 200–300g concentrate for pregnant/lactating goats<br>
+&nbsp;&nbsp;• Mineral block should always be available<br>
+<b>Health Management:</b><br>
+&nbsp;&nbsp;• PPR Vaccination (Goat Plague): Every year (FREE at govt vet centre)<br>
+&nbsp;&nbsp;• Enterotoxaemia (ET): Annually before monsoon<br>
+&nbsp;&nbsp;• FMD: Every 6 months for goats in endemic areas<br>
+&nbsp;&nbsp;• Deworming: Every 3 months<br>
+<b>Common Problems:</b><br>
+&nbsp;&nbsp;• Bloat (gas in stomach): Stand goat upright, massage, give 50ml mustard oil<br>
+&nbsp;&nbsp;• Diarrhea: ORS + electrolytes + consult vet<br>
+<b>Profit Potential:</b> Goat gives 2 kids/year; market value ₹3,000–₹8,000/kid<br>
+<b>Scheme:</b> National Livestock Mission — subsidy for goat unit setup`
+    },
+    {
+      kw:["poultry","chicken","hen","murgi","egg","backyard poultry","broiler","layer"],
+      a:`🐓 <b>Poultry Farming Guide</b><br><br>
+<b>Types:</b><br>
+&nbsp;&nbsp;• Layer birds: Egg production (300+ eggs/year per hen)<br>
+&nbsp;&nbsp;• Broiler birds: Meat in 6 weeks (1.8–2 kg body weight)<br>
+&nbsp;&nbsp;• Backyard poultry (Desi/Kadaknath): Low cost, high price<br>
+<b>Housing:</b><br>
+&nbsp;&nbsp;• 1 sq ft/bird (cage) or 2 sq ft (floor)<br>
+&nbsp;&nbsp;• Ventilation, no dampness, protection from rain and predators<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Starter feed (0–3 weeks): 23% protein<br>
+&nbsp;&nbsp;• Grower feed (3–6 weeks): 20% protein<br>
+&nbsp;&nbsp;• Layer feed: 16% protein + extra calcium<br>
+<b>Vaccination:</b><br>
+&nbsp;&nbsp;• Ranikhet (ND): Day 7 + Day 28 + every 3 months<br>
+&nbsp;&nbsp;• Gumboro (IBD): Day 14 + Day 28<br>
+&nbsp;&nbsp;• Fowl Pox: 6 weeks of age<br>
+<b>Biosecurity:</b> Keep visitors away; disinfect shed regularly<br>
+<b>Scheme:</b> NABARD loan + 25% subsidy for poultry unit<br>
+<b>Helpline:</b> 1962 Pashu Helpline`
+    },
+    {
+      kw:["fish","fishery","pond","aquaculture","fishing","machli"],
+      a:`🐟 <b>Fish Farming / Aquaculture Guide</b><br><br>
+<b>Suitable Fish Species:</b><br>
+&nbsp;&nbsp;• Indian Major Carps: Rohu, Catla, Mrigal (most popular)<br>
+&nbsp;&nbsp;• Pangasius — fast growing, high demand<br>
+&nbsp;&nbsp;• Tilapia — hardy, disease resistant<br>
+<b>Pond Preparation:</b><br>
+&nbsp;&nbsp;• Drain, dry and lime the pond (250 kg CaO/hectare)<br>
+&nbsp;&nbsp;• Apply cow dung manure 1000 kg/hectare<br>
+&nbsp;&nbsp;• Fill 1–1.5 metre water depth<br>
+<b>Stocking:</b> 5,000–8,000 fingerlings/hectare (polyculture of 3 species)<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Rice bran + groundnut cake (1:1) — 2% of fish body weight/day<br>
+&nbsp;&nbsp;• Supplement with soybean meal for better growth<br>
+<b>Harvest:</b> 8–12 months for 1–1.5 kg size fish<br>
+<b>Yield:</b> 3,000–5,000 kg/hectare/year<br>
+<b>PM Matsya Sampada Yojana:</b><br>
+&nbsp;&nbsp;• 40–60% subsidy for pond construction and equipment<br>
+&nbsp;&nbsp;• Apply at district fisheries office<br>
+<b>Helpline:</b> 1800-425-1660`
+    }
+  ],
+
+  finance:[
+    {
+      kw:["save money","saving","bachat","savings","piggy bank","recurring deposit"],
+      a:`💰 <b>Smart Savings for Rural Families</b><br><br>
+<b>Post Office Savings Schemes:</b><br>
+&nbsp;&nbsp;• <b>Sukanya Samriddhi (for girl child):</b> 8.2% interest — best scheme!<br>&nbsp;&nbsp;Min ₹250/year; max ₹1.5 lakh/year; tax-free maturity<br>
+&nbsp;&nbsp;• <b>PPF (Public Provident Fund):</b> 7.1% interest, 15-year lock-in, tax-free<br>
+&nbsp;&nbsp;• <b>NSC (National Savings Certificate):</b> 7.7%, 5-year deposit, guaranteed<br>
+&nbsp;&nbsp;• <b>RD (Recurring Deposit):</b> Save ₹100/month; good for regular income families<br>
+<b>Jan Dhan Account:</b><br>
+&nbsp;&nbsp;• Zero balance account at any bank<br>
+&nbsp;&nbsp;• Comes with RuPay debit card + ₹2 lakh accident insurance FREE<br>
+&nbsp;&nbsp;• Overdraft facility of ₹10,000 after 6 months<br>
+<b>Financial Tips:</b><br>
+&nbsp;&nbsp;• Avoid money lenders — interest 2–5% per month is exploitative<br>
+&nbsp;&nbsp;• Use SHG (Self Help Group) for micro-savings and credit<br>
+&nbsp;&nbsp;• Never put all savings in one place<br>
+<b>Open account at:</b> Any nationalized bank or post office (Aadhaar required)`
+    },
+    {
+      kw:["shg","self help group","mahila mandal","women group","micro finance","bachat gat"],
+      a:`👩‍👩‍👧 <b>Self Help Groups (SHG) — How to Benefit</b><br><br>
+<b>What is SHG?</b> Group of 10–20 women who save together and support each other<br>
+<b>Benefits of Joining SHG:</b><br>
+&nbsp;&nbsp;• Pool savings → get loans at low interest (1–2%/month)<br>
+&nbsp;&nbsp;• No collateral needed for loans<br>
+&nbsp;&nbsp;• Bank loan linkage: ₹1–10 lakh for group business<br>
+&nbsp;&nbsp;• Government schemes accessed easily as a group<br>
+<b>How to Form SHG:</b><br>
+&nbsp;&nbsp;• 10–20 women from same village/locality<br>
+&nbsp;&nbsp;• Open a group bank account<br>
+&nbsp;&nbsp;• Save ₹50–₹200/month each; maintain records<br>
+&nbsp;&nbsp;• Register with Block Development Office for recognition<br>
+<b>Government Support:</b><br>
+&nbsp;&nbsp;• NRLM (DAY-NRLM): Revolving fund ₹15,000 + Community Investment Fund<br>
+&nbsp;&nbsp;• Bank loan at 7% interest (subsidized)<br>
+&nbsp;&nbsp;• Lakhpati Didi program: Help each SHG member earn ₹1 lakh/year<br>
+<b>Contact:</b> Gram Panchayat or Block Mission Management Unit`
+    },
+    {
+      kw:["mudra loan","business loan","small business","self employment","startup loan","enterprise"],
+      a:`🏢 <b>MUDRA Loan — Business Finance</b><br><br>
+<b>PM MUDRA Yojana:</b> Loans for small/micro businesses without collateral<br>
+<b>Three Categories:</b><br>
+&nbsp;&nbsp;• <b>Shishu:</b> Up to ₹50,000 (new/very small businesses)<br>
+&nbsp;&nbsp;• <b>Kishore:</b> ₹50,001 to ₹5 lakh (growing businesses)<br>
+&nbsp;&nbsp;• <b>Tarun:</b> ₹5 lakh to ₹10 lakh (established businesses)<br>
+<b>Who can apply:</b><br>
+&nbsp;&nbsp;• Any non-farm micro/small business<br>
+&nbsp;&nbsp;• Street vendors, shops, artisans, tailors, repair shops<br>
+&nbsp;&nbsp;• Vegetable/fruit sellers, food stalls, beauty parlours<br>
+<b>Documents:</b> Aadhaar + PAN + bank statement + business proof/plan<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit any bank or NBFC branch<br>
+&nbsp;&nbsp;• Apply online: mudra.org.in<br>
+&nbsp;&nbsp;• Or through Udyami Mitra portal<br>
+<b>Interest Rate:</b> 10–12% (varies by bank; no collateral for Shishu/Kishore)<br>
+<b>Helpline:</b> 1800-180-1111 (SIDBI)`
+    },
+    {
+      kw:["upi","digital payment","phonepe","gpay","paytm","online payment","mobile banking"],
+      a:`📱 <b>Digital Payments — Easy Guide</b><br><br>
+<b>UPI (Unified Payment Interface):</b><br>
+&nbsp;&nbsp;• Send/receive money instantly using mobile number or UPI ID<br>
+&nbsp;&nbsp;• Completely FREE — no transaction charges<br>
+&nbsp;&nbsp;• Apps: PhonePe, Google Pay (GPay), BHIM, Paytm, Amazon Pay<br>
+<b>How to Set Up:</b><br>
+&nbsp;&nbsp;1. Download any UPI app<br>
+&nbsp;&nbsp;2. Register with mobile number linked to bank<br>
+&nbsp;&nbsp;3. Set 4-digit UPI PIN (keep secret!)<br>
+&nbsp;&nbsp;4. Start sending/receiving money<br>
+<b>Safety Rules:</b><br>
+&nbsp;&nbsp;• ⚠️ NEVER share UPI PIN or OTP with anyone<br>
+&nbsp;&nbsp;• Bank/govt never asks for PIN on call — it's a fraud<br>
+&nbsp;&nbsp;• Check receiver's name before sending<br>
+&nbsp;&nbsp;• For receiving money — you don't need to enter PIN<br>
+<b>Aadhaar Enabled Payment (AePS):</b><br>
+&nbsp;&nbsp;• Use fingerprint at nearest CSC/bank BC to withdraw money<br>
+&nbsp;&nbsp;• No mobile or internet needed for this!<br>
+<b>Report Fraud:</b> Call 1930 (Cyber Crime Helpline) immediately`
+    }
+  ],
+
+  market:[
+    {
+      kw:["market price","mandi","sabzi","vegetable price","crop price","mandibhav","wholesale"],
+      a:`📊 <b>Crop Market Price Information</b><br><br>
+<b>Where to Check Live Mandi Prices (Free):</b><br>
+&nbsp;&nbsp;• <b>Agmarknet:</b> agmarknet.nic.in — official govt mandi prices<br>
+&nbsp;&nbsp;• <b>eNAM Portal:</b> enam.gov.in — national electronic market<br>
+&nbsp;&nbsp;• <b>Kisan Suvidha App:</b> Market prices + weather + crop advisory<br>
+&nbsp;&nbsp;• <b>SMS:</b> Send crop name + state to 55444 for price<br>
+<b>MSP (Minimum Support Price) 2024–25:</b><br>
+&nbsp;&nbsp;• Paddy (Common): ₹2,300/quintal<br>
+&nbsp;&nbsp;• Wheat: ₹2,275/quintal<br>
+&nbsp;&nbsp;• Maize: ₹2,090/quintal<br>
+&nbsp;&nbsp;• Tur Dal: ₹7,550/quintal<br>
+&nbsp;&nbsp;• Moong: ₹8,682/quintal<br>
+&nbsp;&nbsp;• Cotton (Medium): ₹7,121/quintal<br>
+&nbsp;&nbsp;• Soybean: ₹4,892/quintal<br>
+<b>Sell at MSP:</b><br>
+&nbsp;&nbsp;• Register on PM-KISAN/State portal for MSP procurement<br>
+&nbsp;&nbsp;• Bring produce to nearest procurement centre with Aadhaar + land record<br>
+<b>FPO/Cooperatives:</b> Join for better collective bargaining and direct market access`
+    },
+    {
+      kw:["fpo","farmer producer","cooperative","collective farming","group selling"],
+      a:`🤝 <b>Farmer Producer Organizations (FPO) Guide</b><br><br>
+<b>What is FPO?</b> A group of farmers who collectively produce, process and sell their produce<br>
+<b>Benefits of Joining FPO:</b><br>
+&nbsp;&nbsp;• Buy inputs (seed, fertilizer) at wholesale rates — saves 15–20%<br>
+&nbsp;&nbsp;• Sell produce directly to buyers — better price<br>
+&nbsp;&nbsp;• Access to cold storage, processing facilities<br>
+&nbsp;&nbsp;• Bank loan as group is easier<br>
+&nbsp;&nbsp;• Export directly to foreign markets<br>
+<b>Government Support for FPOs:</b><br>
+&nbsp;&nbsp;• ₹18 lakh equity grant per FPO under Agri Infrastructure Fund<br>
+&nbsp;&nbsp;• NABARD + SFAC provide handholding support<br>
+&nbsp;&nbsp;• 3 year support from Cluster Based Business Organisations (CBBO)<br>
+<b>10,000 FPO Scheme:</b><br>
+&nbsp;&nbsp;• Govt forming 10,000 new FPOs across India<br>
+&nbsp;&nbsp;• Minimum 300 members (100 for hill areas)<br>
+<b>How to Join/Form:</b> Contact nearest ATMA office, NABARD or Krishi Vigyan Kendra<br>
+<b>Find FPO in your area:</b> sfacindia.com or enam.gov.in`
+    },
+    {
+      kw:["cold storage","storage","warehouse","sell after season","store crop","silos"],
+      a:`🏭 <b>Crop Storage & Post-Harvest Management</b><br><br>
+<b>Why Store Crops?</b> Sell when prices are high — not immediately after harvest when prices are low<br>
+<b>Warehouse Receipt System:</b><br>
+&nbsp;&nbsp;• Store grain in WDRA-registered warehouse<br>
+&nbsp;&nbsp;• Get receipt — use it as collateral for 70% bank loan<br>
+&nbsp;&nbsp;• Sell when prices rise; repay loan<br>
+&nbsp;&nbsp;• Find warehouse: wdra.gov.in<br>
+<b>Government Schemes:</b><br>
+&nbsp;&nbsp;• <b>Agriculture Infrastructure Fund:</b> 3% interest subsidy for cold storage/warehouse<br>
+&nbsp;&nbsp;• <b>Grameen Bhandaran Yojana:</b> Subsidy for rural godowns<br>
+&nbsp;&nbsp;• <b>NABARD:</b> Loan for cold chain infrastructure<br>
+<b>On-Farm Storage Tips:</b><br>
+&nbsp;&nbsp;• Dry grain to safe moisture (rice: 14%, wheat: 12%)<br>
+&nbsp;&nbsp;• Use metal bins (pusa bins) to prevent pest damage<br>
+&nbsp;&nbsp;• Hermetic storage bags (IRRI Super Bag) — pest-free for 6+ months<br>
+&nbsp;&nbsp;• Apply Aluminium Phosphide tablets in bags for grain protection<br>
+<b>Avoid:</b> Storing wet grain — leads to fungal growth (mycotoxins)`
+    }
+  ]
+};
+
+/* ============================================================
+   GLOBAL STATE
+============================================================ */
+let topic='all', lang='en-IN', msgCount=0, totalBytes=0;
+let autoTTS=false, soundOn=true, darkMode=false, saverMode=false;
+let isListening=false, recognition=null;
+const synth=window.speechSynthesis;
+let sessionStart=Date.now(), chatLog=[];
+
+/* ============================================================
+   INIT
+============================================================ */
+window.onload=()=>{
+  checkOnline();
+  window.addEventListener('online',  checkOnline);
+  window.addEventListener('offline', checkOnline);
+  startSessionTimer();
+  loadWeather();
+  setTimeout(()=>{
+    botMsg(
+      "👋 <b>Namaste! I am Gram Sahayak AI</b> 🌾<br><br>"+
+      "I am your offline-ready rural assistant. I can help you with:<br>"+
+      "🌱 Agriculture & Crops &nbsp;|&nbsp; ❤️ Health & First Aid<br>"+
+      "🌦️ Weather Advisory &nbsp;|&nbsp; 🏛️ Government Schemes<br>"+
+      "📚 Education &nbsp;|&nbsp; 🐄 Livestock &nbsp;|&nbsp; 💰 Finance &nbsp;|&nbsp; 📊 Market<br><br>"+
+      "<i>Type your question below or tap 🎙️ to speak!</i>",
+      ['Rice farming tips','How to treat fever','PM KISAN details','Cow rearing guide']
+    );
+  },500);
+};
+
+/* ============================================================
+   ONLINE / OFFLINE
+============================================================ */
+function checkOnline(){
+  const off=!navigator.onLine;
+  document.getElementById('offlineBanner').style.display=off?'block':'none';
+  document.getElementById('statusText').textContent=off?'Offline':'Online';
+  document.getElementById('modeText').textContent=off?'Offline KB':'Normal';
+}
+
+/* ============================================================
+   SESSION TIMER
+============================================================ */
+function startSessionTimer(){
+  setInterval(()=>{
+    const s=Math.floor((Date.now()-sessionStart)/1000);
+    const m=Math.floor(s/60), ss=s%60;
+    document.getElementById('sessionTime').textContent=
+      m+':'+(ss<10?'0':'')+ss;
+  },1000);
+}
+
+/* ============================================================
+   TOPIC
+============================================================ */
+function setTopic(t,btn){
+  topic=t;
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ============================================================
+   LANGUAGE
+============================================================ */
+function changeLanguage(){
+  lang=document.getElementById('langSelect').value||
+       document.getElementById('modalLang').value;
+  document.getElementById('langSelect').value=lang;
+  document.getElementById('modalLang').value=lang;
+  if(recognition) recognition.lang=lang;
+}
+
+/* ============================================================
+   KEYBOARD
+============================================================ */
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,90)+'px';
+}
+
+/* ============================================================
+   SEND MESSAGE
+============================================================ */
+function sendMessage(txt){
+  const inp=document.getElementById('userInput');
+  const msg=(txt||inp.value).trim();
+  if(!msg)return;
+  inp.value=''; inp.style.height='auto';
+  // Hide quick cards after first message
+  document.getElementById('qaGrid').style.display='none';
+  userMsg(msg);
+  setTimeout(()=>processQuery(msg), 700);
+}
+
+/* ============================================================
+   USER BUBBLE
+============================================================ */
+function userMsg(text){
+  msgCount++; totalBytes+=text.length; updateStats();
+  chatLog.push({role:'user',text,time:getTime()});
+  progress(30);
+  const d=document.createElement('div');
+  d.className='msg user';
+  d.innerHTML=`
+    <div class="av usr-av">👤</div>
+    <div class="bubble">${escHtml(text)}<div class="ts">${getTime()}</div></div>`;
+  document.getElementById('chatBox').appendChild(d);
+  scrollDown();
+}
+
+/* ============================================================
+   BOT BUBBLE
+============================================================ */
+function botMsg(html, chips=[]){
+  msgCount++; totalBytes+=html.length; updateStats();
+  chatLog.push({role:'bot',text:stripTags(html),time:getTime()});
+  const chat=document.getElementById('chatBox');
+  // Typing
+  const tDiv=document.createElement('div');
+  tDiv.className='msg bot'; tDiv.id='typing';
+  tDiv.innerHTML=`
+    <div class="av bot-av">🌾</div>
+    <div class="bubble">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>`;
+  chat.appendChild(tDiv); scrollDown();
+  progress(70);
+
+  setTimeout(()=>{
+    tDiv.remove(); progress(100);
+    const rDiv=document.createElement('div');
+    rDiv.className='msg bot';
+    let chipHtml='';
+    if(chips.length){
+      chipHtml='<div class="chips">'+
+        chips.map(c=>`<div class="chip" onclick="sendMessage('${c}')">${c}</div>`).join('')+
+      '</div>';
+    }
+    const plainText=stripTags(html);
+    rDiv.innerHTML=`
+      <div class="av bot-av">🌾</div>
+      <div class="bubble">
+        ${html}
+        ${chipHtml}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <button class="read-aloud" onclick="speak('${encodeURIComponent(plainText)}',true)">🔊 Read Aloud</button>
+          <div class="ts">${getTime()}</div>
+        </div>
+      </div>`;
+    chat.appendChild(rDiv); scrollDown();
+    setTimeout(()=>progress(0),600);
+    if(autoTTS) speak(plainText);
+    if(soundOn) playSound();
+  }, saverMode?400:1000);
+}
+
+/* ============================================================
+   PROGRESS BAR
+============================================================ */
+function progress(val){
+  document.getElementById('progress').style.width=val+'%';
+}
+
+/* ============================================================
+   PROCESS QUERY (AI Logic)
+============================================================ */
+function processQuery(q){
+  const ql=q.toLowerCase();
+
+  // Greetings
+  if(/^(hi|hello|namaste|hey|namaskar|good morning|good evening|jai|pranam|vanakkam|salam)/i.test(ql)){
+    botMsg("🙏 <b>Namaste!</b> How can I help you today?<br>Choose a topic tab or type your question.",
+      ['Rice farming','How to treat fever','PM KISAN','Save money tips']);
+    return;
+  }
+
+  // Thanks
+  if(/thank|dhanyawad|shukriya|thanks/i.test(ql)){
+    botMsg("😊 You're welcome! I'm always here to help.<br>Feel free to ask anything else! 🌾");
+    return;
+  }
+
+  // Help
+  if(/help|what can you|capabilities|features|kya kar sakte/i.test(ql)){
+    botMsg("🤖 <b>I can help you with:</b><br><br>"+
+      "🌱 <b>Agriculture</b> — Rice, Wheat, Maize, Cotton, Vegetables, Organic Farming<br>"+
+      "❤️ <b>Health</b> — Fever, Diarrhea, Pregnancy, Snake Bite, First Aid, Diabetes<br>"+
+      "🌦️ <b>Weather</b> — Monsoon, Drought, Heat Wave, Storm Safety<br>"+
+      "🏛️ <b>Government</b> — PM-KISAN, Ayushman, Ration, KCC, MGNREGA, PMAY<br>"+
+      "📚 <b>Education</b> — Scholarships, Literacy, Skill Training<br>"+
+      "🐄 <b>Livestock</b> — Cattle, Goat, Poultry, Fish Farming<br>"+
+      "💰 <b>Finance</b> — Savings, SHG, MUDRA Loan, Digital Payments<br>"+
+      "📊 <b>Market</b> — MSP Prices, FPO, Storage Tips",
+      ['Rice farming tips','PM KISAN details','How to raise goats','MUDRA loan details']);
+    return;
+  }
+
+  // Emergency
+  if(/emergency|help me|accident|fire|police|ambulance|108|100|101/i.test(ql)){
+    botMsg("🆘 <b>EMERGENCY CONTACTS:</b><br><br>"+
+      "🚑 Ambulance: <b>108</b><br>"+
+      "👮 Police: <b>100</b><br>"+
+      "🚒 Fire: <b>101</b><br>"+
+      "🌊 NDRF Disaster: <b>1078</b><br>"+
+      "👩 Women Safety: <b>181</b><br>"+
+      "🌾 Kisan Helpline: <b>1800-180-1551</b><br>"+
+      "🏥 Health: <b>104</b><br><br>"+
+      "<b>Tap the 🆘 button at the top for quick dial!</b>");
+    return;
+  }
+
+  // Weather (live attempt)
+  if(/current weather|aaj ka mausam|today weather|temperature today/i.test(ql)){
+    fetchWeather();
+    botMsg("🌤️ I'm fetching the latest weather data for you...<br>"+
+      "You can also tap the <b>🌤️ button</b> in the header to see the weather widget!<br><br>"+
+      "For daily farm-specific forecasts, use <b>Meghdoot App</b> or SMS your pincode to <b>7738299899</b>");
+    return;
+  }
+
+  // Search KB
+  const allEntries = topic==='all'
+    ? Object.values(KB).flat()
+    : (KB[topic]||Object.values(KB).flat());
+
+  let best=null, score=0;
+  for(const e of allEntries){
+    let s=0;
+    for(const k of e.kw){ if(ql.includes(k)) s+=k.split(' ').length; }
+    if(s>score){ score=s; best=e; }
+  }
+
+  if(best&&score>0){
+    botMsg(best.a, getChips(topic));
+  } else {
+    // Fuzzy partial match
+    let partial=null, ps=0;
+    for(const e of Object.values(KB).flat()){
+      for(const k of e.kw){
+        const words=k.split(' ');
+        for(const w of words){
+          if(w.length>3 && ql.includes(w)){
+            if(1>ps){ ps=1; partial=e; }
+          }
+        }
+      }
+    }
+    if(partial){
+      botMsg(partial.a, getChips('all'));
+    } else {
+      botMsg(
+        "🤔 <b>I couldn't find that in my local knowledge base.</b><br><br>"+
+        "Try asking about:<br>"+
+        "• <i>Rice/Wheat/Maize farming</i><br>"+
+        "• <i>Fever, diarrhea, pregnancy treatment</i><br>"+
+        "• <i>PM-KISAN, Ayushman Bharat, MGNREGA</i><br>"+
+        "• <i>Goat/Poultry/Fish farming</i><br>"+
+        "• <i>MUDRA loan, SHG, savings tips</i><br>"+
+        "• <i>Monsoon/drought advisory</i><br><br>"+
+        "📡 <i>When online, I can search the internet for your query.</i>",
+        ['Rice farming','Fever treatment','PM KISAN','Goat farming']
+      );
+    }
+  }
+}
+
+/* ============================================================
+   CHIPS HELPER
+============================================================ */
+function getChips(t){
+  const c={
+    agriculture:['Soil health tips','Drip irrigation','Pest control','Organic farming'],
+    health:['Snake bite first aid','Pregnancy care','Fever treatment','Child nutrition'],
+    weather:['Flood preparation','Drought advisory','Weather apps'],
+    government:['Ayushman Bharat','KCC loan','MGNREGA work','PM Awas Yojana'],
+    education:['Student scholarships','Adult literacy','Skill training'],
+    livestock:['Buffalo farming','Goat rearing','Poultry guide','Fish farming'],
+    finance:['SHG benefits','MUDRA loan','UPI payments','Post office savings'],
+    market:['MSP prices','FPO benefits','Crop storage tips'],
+    all:['Rice farming','Cow care','PM KISAN','MUDRA loan']
+  };
+  return c[t]||c.all;
+}
+
+/* ============================================================
+   WEATHER WIDGET
+============================================================ */
+function toggleWeather(){
+  const w=document.getElementById('weatherWidget');
+  w.classList.toggle('show');
+  if(w.classList.contains('show')) loadWeather();
+}
+
+function loadWeather(){
+  if(!navigator.geolocation){
+    setWeatherDisplay(null); return;
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    fetchWeatherCoords(pos.coords.latitude, pos.coords.longitude);
+  }, ()=>setWeatherDisplay(null));
+}
+
+function fetchWeather(){
+  loadWeather();
+  document.getElementById('weatherWidget').classList.add('show');
+}
+
+async function fetchWeatherCoords(lat,lon){
+  try{
+    const res=await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`+
+      `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,apparent_temperature,weather_code`+
+      `&timezone=auto`
+    );
+    const d=await res.json();
+    const c=d.current;
+    setWeatherDisplay({
+      temp: Math.round(c.temperature_2m),
+      feels: Math.round(c.apparent_temperature),
+      hum: c.relative_humidity_2m,
+      wind: Math.round(c.wind_speed_10m),
+      code: c.weather_code,
+      lat,lon
+    });
+    // Update stat bar
+    document.getElementById('weatherStat').style.display='flex';
+    document.getElementById('tempStat').textContent=Math.round(c.temperature_2m)+'°C';
+  }catch(e){
+    setWeatherDisplay(null);
+  }
+}
+
+function setWeatherDisplay(d){
+  if(!d){
+    document.getElementById('ww-temp').textContent='--°C';
+    document.getElementById('ww-desc').textContent='Unable to load weather';
+    document.getElementById('ww-loc').textContent='📍 Location unavailable';
+    return;
+  }
+  document.getElementById('ww-temp').textContent=d.temp+'°C';
+  document.getElementById('ww-feels').textContent=d.feels+'°C';
+  document.getElementById('ww-hum').textContent=d.hum+'%';
+  document.getElementById('ww-wind').textContent=d.wind+' km/h';
+  document.getElementById('ww-icon').textContent=wmoToEmoji(d.code);
+  document.getElementById('ww-desc').textContent=wmoToDesc(d.code);
+  document.getElementById('ww-date').textContent=new Date().toLocaleDateString('en-IN');
+  document.getElementById('ww-loc').textContent='📍 Lat:'+d.lat.toFixed(2)+' Lon:'+d.lon.toFixed(2);
+}
+
+function wmoToEmoji(c){
+  if(c===0)return'☀️';
+  if(c<=2)return'⛅';
+  if(c===3)return'☁️';
+  if(c<=49)return'🌫️';
+  if(c<=69)return'🌧️';
+  if(c<=79)return'🌨️';
+  if(c<=84)return'🌦️';
+  if(c<=94)return'⛈️';
+  return'🌩️';
+}
+
+function wmoToDesc(c){
+  if(c===0)return'Clear sky';
+  if(c<=2)return'Partly cloudy';
+  if(c===3)return'Overcast';
+  if(c<=49)return'Foggy / Mist';
+  if(c<=69)return'Rain showers';
+  if(c<=79)return'Snow';
+  if(c<=84)return'Rain showers';
+  return'Thunderstorm';
+}
+
+/* ============================================================
+   EMERGENCY
+============================================================ */
+function toggleEmergency(){
+  document.getElementById('emergencyPanel').classList.toggle('show');
+}
+
+function callNum(n){
+  window.location.href='tel:'+n;
+}
+
+/* ============================================================
+   SPEECH SYNTHESIS (TTS)
+============================================================ */
+function speak(textOrEncoded, isEncoded=false){
+  if(!synth)return;
+  const text=isEncoded?decodeURIComponent(textOrEncoded):textOrEncoded;
+  synth.cancel();
+  const utt=new SpeechSynthesisUtterance(text.substring(0,300));
+  utt.lang=lang; utt.rate=0.
