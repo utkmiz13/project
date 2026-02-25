@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rural AI Assistant 🌾</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --green:       #2e7d32;
+      --light-green: #4caf50;
+      --bg:          #f1f8e9;
+      --card:        #ffffff;
+      --text:        #1b1b1b;
+      --muted:       #666;
+      --user-bubble: #c8e6c9;
+      --bot-bubble:  #ffffff;
+      --shadow:      0 4px 20px rgba(0,0,0,0.10);
+      --radius:      16px;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: linear-gradient(135deg, var(--green), var(--light-green));
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .header-title h1 {
+      font-size: 1.3rem;
+      color: white;
+      font-weight: 700;
+    }
+
+    .header-title p {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: white;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #a5d6a7;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    /* ===== TOPIC TABS ===== */
+    .topics {
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      scrollbar-width: none;
+    }
+
+    .topics::-webkit-scrollbar { display: none; }
+
+    .topic-btn {
+      white-space: nowrap;
+      padding: 7px 16px;
+      border: 2px solid var(--light-green);
+      background: white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--green);
+      transition: all 0.2s;
+    }
+
+    .topic-btn:hover,
+    .topic-btn.active {
+      background: var(--light-green);
+      color: white;
+    }
+
+    /* ===== CHAT AREA ===== */
+    .chat-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    /* ===== MESSAGE BUBBLES ===== */
+    .message {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      animation: fadeUp 0.3s ease;
+      max-width: 85%;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .avatar.bot-av  { background: var(--light-green); }
+    .avatar.user-av { background: #81c784; }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      box-shadow: var(--shadow);
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+
+    .message.user .bubble {
+      background: var(--user-bubble);
+      border-bottom-right-radius: 4px;
+      color: #1b3a1c;
+    }
+
+    .message.bot .bubble {
+      background: var(--bot-bubble);
+      border-bottom-left-radius: 4px;
+      border-left: 4px solid var(--light-green);
+    }
+
+    .bubble .timestamp {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* ===== TYPING INDICATOR ===== */
+    .typing-indicator {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 10px 14px;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--light-green);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-6px); }
+    }
+
+    /* ===== SUGGESTION CHIPS ===== */
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      background: #e8f5e9;
+      border: 1px solid var(--light-green);
+      color: var(--green);
+      padding: 5px 12px;
+      border-radius: 14px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .chip:hover {
+      background: var(--light-green);
+      color: white;
+    }
+
+    /* ===== INPUT BAR ===== */
+    .input-bar {
+      background: white;
+      padding: 14px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+      border-top: 1px solid #e0e0e0;
+    }
+
+    #userInput {
+      flex: 1;
+      border: 2px solid #c8e6c9;
+      border-radius: 24px;
+      padding: 10px 18px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+      resize: none;
+      max-height: 100px;
+    }
+
+    #userInput:focus {
+      border-color: var(--light-green);
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    #micBtn {
+      background: #e8f5e9;
+      color: var(--green);
+    }
+
+    #micBtn.listening {
+      background: #ffcdd2;
+      color: #c62828;
+      animation: micPulse 1s infinite;
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.3); }
+      50%       { box-shadow: 0 0 0 10px rgba(198, 40, 40, 0); }
+    }
+
+    #sendBtn {
+      background: var(--light-green);
+      color: white;
+    }
+
+    #sendBtn:hover { background: var(--green); }
+    #micBtn:hover  { background: #c8e6c9; }
+
+    /* ===== LANGUAGE SELECTOR ===== */
+    .lang-select {
+      padding: 6px 10px;
+      border: 2px solid #c8e6c9;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: var(--green);
+      background: white;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ===== OFFLINE BANNER ===== */
+    .offline-banner {
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      color: #e65100;
+      display: none;
+      font-weight: 600;
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+      background: #f9fbe7;
+      border-top: 1px solid #dcedc8;
+      padding: 8px 16px;
+      display: flex;
+      gap: 20px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .stat { display: flex; align-items: center; gap: 5px; }
+    .stat strong { color: var(--green); }
+
+    /* ===== SCROLLBAR ===== */
+    .chat-wrapper::-webkit-scrollbar { width: 4px; }
+    .chat-wrapper::-webkit-scrollbar-thumb {
+      background: #c8e6c9;
+      border-radius: 4px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .header-title h1 { font-size: 1.05rem; }
+      .bubble { font-size: 0.85rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="header-left">
+    <div class="logo">🌾</div>
+    <div class="header-title">
+      <h1>Gram Sahayak AI</h1>
+      <p>Low-Bandwidth Rural Assistant</p>
+    </div>
+  </div>
+  <div class="status-badge">
+    <div class="status-dot"></div>
+    <span id="statusText">Online</span>
+  </div>
+</header>
+
+<!-- ===== OFFLINE BANNER ===== -->
+<div class="offline-banner" id="offlineBanner">
+  ⚠️ You are offline — Using local knowledge base only
+</div>
+
+<!-- ===== TOPIC TABS ===== -->
+<div class="topics">
+  <button class="topic-btn active" onclick="setTopic('all', this)">🌐 All</button>
+  <button class="topic-btn" onclick="setTopic('agriculture', this)">🌱 Agriculture</button>
+  <button class="topic-btn" onclick="setTopic('health', this)">❤️ Health</button>
+  <button class="topic-btn" onclick="setTopic('weather', this)">🌦️ Weather</button>
+  <button class="topic-btn" onclick="setTopic('government', this)">🏛️ Gov Schemes</button>
+  <button class="topic-btn" onclick="setTopic('education', this)">📚 Education</button>
+</div>
+
+<!-- ===== STATS BAR ===== -->
+<div class="stats-bar">
+  <div class="stat">💬 Messages: <strong id="msgCount">0</strong></div>
+  <div class="stat">📦 KB Used: <strong id="kbUsed">~0 KB</strong></div>
+  <div class="stat">🔋 Mode: <strong id="modeText">Normal</strong></div>
+</div>
+
+<!-- ===== CHAT AREA ===== -->
+<div class="chat-wrapper" id="chatBox"></div>
+
+<!-- ===== INPUT BAR ===== -->
+<div class="input-bar">
+  <select class="lang-select" id="langSelect" onchange="changeLanguage()">
+    <option value="en-IN">🇮🇳 English</option>
+    <option value="hi-IN">🇮🇳 Hindi</option>
+    <option value="ta-IN">🇮🇳 Tamil</option>
+    <option value="te-IN">🇮🇳 Telugu</option>
+    <option value="sw-KE">🇰🇪 Swahili</option>
+  </select>
+  <textarea id="userInput" rows="1"
+    placeholder="Ask about farming, health, weather..."
+    onkeydown="handleKey(event)"></textarea>
+  <button class="icon-btn" id="micBtn" onclick="toggleMic()" title="Voice Input">🎙️</button>
+  <button class="icon-btn" id="sendBtn" onclick="sendMessage()" title="Send">➤</button>
+</div>
+
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  // =============================================
+  // 1. KNOWLEDGE BASE (Offline Local Data)
+  // =============================================
+  const knowledgeBase = {
+    agriculture: [
+      {
+        keywords: ["rice","paddy","crop","grow","plant"],
+        answer: "🌾 **Rice Farming Tips:**\n• Best sowing time: June–July (Kharif) or Nov–Dec (Rabi)\n• Needs 20–25°C temperature\n• Water requirement: 1200–1800 mm per season\n• Common disease: Blast — spray Tricyclazole fungicide\n• Use certified seeds like IR-64 or Swarna for better yield\n• Apply DAP fertilizer at transplanting stage"
+      },
+      {
+        keywords: ["wheat","rabi","winter crop"],
+        answer: "🌾 **Wheat Farming Tips:**\n• Sow in Oct–Nov for best results\n• Ideal temp: 10–25°C\n• Irrigate 6 times during growth stages\n• Use HD-2967 or PBW-343 varieties\n• Apply Urea in 3 splits: at sowing, 21 days, and 45 days\n• Watch for Yellow Rust disease — spray Propiconazole"
+      },
+      {
+        keywords: ["soil","fertilizer","nutrient","compost"],
+        answer: "🌱 **Soil Health Tips:**\n• Test soil every 2–3 years\n• Use organic compost to improve structure\n• NPK ratio for most crops: 4:2:1\n• Green manure (Dhaincha) improves nitrogen\n• Avoid over-use of chemical fertilizers\n• Vermicompost is best for small farms"
+      },
+      {
+        keywords: ["pest","insect","disease","spray","fungal"],
+        answer: "🐛 **Pest & Disease Management:**\n• Neem oil spray (5ml/litre water) is effective for most insects\n• Yellow sticky traps catch whiteflies and aphids\n• Rotate crops every season to break pest cycles\n• Use bio-pesticides like Trichoderma for fungal disease\n• Early morning spray is most effective\n• Keep field clean — remove crop residue after harvest"
+      },
+      {
+        keywords: ["irrigation","water","drip","sprinkler"],
+        answer: "💧 **Irrigation Tips:**\n• Drip irrigation saves 40–50% water\n• Irrigate in early morning or evening to reduce evaporation\n• Check soil moisture before irrigating\n• Use mulching to retain soil moisture\n• Rainwater harvesting can reduce water costs\n• Sandy soils need more frequent irrigation than clay soils"
+      }
+    ],
+    health: [
+      {
+        keywords: ["fever","temperature","high fever","malaria"],
+        answer: "🌡️ **Fever Guidance:**\n• Drink plenty of water and ORS (Oral Rehydration Solution)\n• Rest and avoid heavy work\n• If fever >103°F or lasts >3 days — visit doctor immediately\n• Paracetamol can reduce fever temporarily\n• For malaria risk areas: use mosquito nets and check for chills\n• Keep track of symptoms to report to healthcare worker"
+      },
+      {
+        keywords: ["diarrhea","loose motion","stomach","vomit"],
+        answer: "💊 **Diarrhea / Stomach Issues:**\n• Most important: DRINK ORS SOLUTION immediately\n• Make homemade ORS: 1 litre water + 6 tsp sugar + ½ tsp salt\n• Avoid oily and spicy food\n• BRAT diet helps: Banana, Rice, Applesauce, Toast\n• If blood in stool or >3 days — urgent medical care needed\n• Wash hands before eating and after toilet"
+      },
+      {
+        keywords: ["pregnancy","pregnant","maternal","baby","delivery"],
+        answer: "🤱 **Maternal Health:**\n• Register pregnancy at local PHC within first 3 months\n• Get 4 ANC (Antenatal Care) checkups minimum\n• Take Iron & Folic Acid tablets daily\n• Get Tetanus, TT vaccines as advised\n• Institutional delivery is safer — go to nearest health centre\n• Breastfeed baby within 1 hour of birth\n• Contact ASHA worker for Janani Suraksha Yojana benefits"
+      },
+      {
+        keywords: ["snake bite","snakebite","snake"],
+        answer: "🐍 **Snakebite Emergency:**\n• Stay CALM — do not panic or run\n• Immobilize the bitten limb — keep below heart level\n• DO NOT cut, suck, or tie tourniquet — this causes more harm\n• Remove watches, rings near the bite area\n• Go to nearest hospital IMMEDIATELY — time is critical\n• Anti-snake venom is only available at hospitals\n• Do not give food, water, or alcohol to the patient"
+      },
+      {
+        keywords: ["first aid","wound","cut","bleeding","injury"],
+        answer: "🩹 **Basic First Aid:**\n• For cuts/wounds: clean with clean water, apply pressure with cloth\n• For burns: run cool water for 10 minutes, do not use ice\n• For fractures: immobilize with a stick/splint, don't move patient\n• For unconscious person: check breathing, recovery position\n• CPR: 30 chest compressions + 2 rescue breaths\n• Always seek professional medical help for serious injuries"
+      }
+    ],
+    weather: [
+      {
+        keywords: ["rain","monsoon","rainfall","flood"],
+        answer: "🌧️ **Monsoon & Flood Advisory:**\n• Store essential food, water, and medicines before monsoon\n• Do not cross flooded roads or rivers\n• Move to higher ground if flood warning issued\n• Keep emergency contact numbers ready (NDRF: 011-24363260)\n• Check weather forecast daily on Meghdoot App (works offline)\n• Drain standing water near home to prevent mosquito breeding"
+      },
+      {
+        keywords: ["drought","dry","water shortage","heat wave"],
+        answer: "☀️ **Drought & Heat Wave Tips:**\n• Drink minimum 3 litres of water daily in extreme heat\n• Avoid going out between 12 PM – 3 PM in summer\n• Use mulching on farmland to conserve soil moisture\n• Grow drought-resistant crops like Bajra, Jowar, or Moth Bean\n• Report water shortage to Gram Panchayat for tanker supply\n• Keep livestock in shade and provide extra water"
+      },
+      {
+        keywords: ["weather","forecast","temperature","season"],
+        answer: "🌤️ **Weather Guidance:**\n• Use Meghdoot or Kisan Suvidha apps for daily forecasts\n• Best planting time: 2–3 days after rainfall\n• Avoid spraying pesticides before expected rain\n• Watch for sudden cloud formation — indicates unseasonal rain\n• Temperature below 10°C can damage sensitive crops\n• Wind speed >40 km/h — support tall crops with stakes"
+      }
+    ],
+    government: [
+      {
+        keywords: ["pm kisan","kisan","samman","scheme","money","payment"],
+        answer: "🏛️ **PM-KISAN Samman Nidhi:**\n• ₹6,000 per year given in 3 installments of ₹2,000\n• For all small & marginal farmers with land records\n• Register at: pmkisan.gov.in or nearest CSC centre\n• Check payment status via SMS to 155261\n• Need: Aadhaar card, bank account, land records (Khatoni)\n• Any issues: call helpline 155261 or 011-24300606"
+      },
+      {
+        keywords: ["health card","ayushman","insurance","hospital","free treatment"],
+        answer: "🏥 **Ayushman Bharat (PMJAY):**\n• Free health cover up to ₹5 lakh per family per year\n• Covers 1,500+ medical procedures\n• Check eligibility: mera.pmjay.gov.in\n• Get golden card from nearest CSC or empanelled hospital\n• Works at government AND private empanelled hospitals\n• No premium payment needed for eligible families\n• Helpline: 14555 or 1800-111-565"
+      },
+      {
+        keywords: ["ration","food","pds","wheat rice","free grain"],
+        answer: "🌾 **Public Distribution System (Ration):**\n• NFSA provides subsidized/free food grains to eligible families\n• BPL families: 5 kg per person per month at ₹1-3/kg\n• Carry Ration Card + Aadhaar for authentication\n• One Nation One Ration Card — use ration anywhere in India\n• Check nearby ration shop: nfsa.gov.in\n• Grievance: call 1800-180-1007 (toll free)"
+      },
+      {
+        keywords: ["loan","credit","kcc","farmer loan","bank"],
+        answer: "🏦 **Kisan Credit Card (KCC):**\n• Short-term credit for farming needs at 4% interest\n• Credit limit based on land holding and crop\n• Valid for 5 years with annual renewal\n• Apply at any nationalized bank with: Aadhaar, land records, passport photo\n• Also covers post-harvest expenses and maintenance\n• KCC holders get crop insurance automatically\n• Contact nearest bank or Gram Panchayat for assistance"
+      }
+    ],
+    education: [
+      {
+        keywords: ["scholarship","study","school","fees","student"],
+        answer: "📚 **Student Scholarships:**\n• National Means-cum-Merit Scholarship (NMMS): ₹12,000/year for Class 9–12\n• SC/ST Post-Matric Scholarship: Full fee + maintenance allowance\n• Begum Hazrat Mahal Scholarship for minority girl students\n• Apply at: scholarships.gov.in (National Scholarship Portal)\n• Deadline: Usually September–October each year\n• Documents: Marksheet, income certificate, bank account, Aadhaar"
+      },
+      {
+        keywords: ["literacy","read","write","learn","adult education"],
+        answer: "📖 **Adult Literacy Programs:**\n• ULLAS (New India Literacy Program) — free basic education for adults\n• Learning centers available at schools and Gram Panchayat\n• Covers reading, writing, numeracy, digital literacy\n• Contact nearest school headmaster or ASHA worker to enroll\n• Free study materials available in regional languages\n• No age limit for enrollment"
+      }
+    ]
+  };
+
+  // =============================================
+  // 2. GLOBAL STATE
+  // =============================================
+  let currentTopic    = 'all';
+  let currentLang     = 'en-IN';
+  let msgCount        = 0;
+  let totalKBUsed     = 0;
+  let isListening     = false;
+  let recognition     = null;
+  const synth         = window.speechSynthesis;
+
+  // =============================================
+  // 3. INIT — Welcome Message
+  // =============================================
+  window.onload = () => {
+    checkOnlineStatus();
+    window.addEventListener('online',  checkOnlineStatus);
+    window.addEventListener('offline', checkOnlineStatus);
+    setTimeout(() => {
+      botMessage(
+        "👋 **Namaste! Welcome to Gram Sahayak AI**\n\nI can help you with:\n🌱 Agriculture & Farming\n❤️ Health & First Aid\n🌦️ Weather Advisory\n🏛️ Government Schemes\n📚 Education Support\n\n*Ask me anything in English, Hindi, or your regional language!*",
+        getWelcomeSuggestions()
+      );
+    }, 400);
+  };
+
+  // =============================================
+  // 4. ONLINE / OFFLINE DETECTION
+  // =============================================
+  function checkOnlineStatus() {
+    const offline   = !navigator.onLine;
+    const banner    = document.getElementById('offlineBanner');
+    const statusTxt = document.getElementById('statusText');
+    const modeTxt   = document.getElementById('modeText');
+    banner.style.display = offline ? 'block' : 'none';
+    statusTxt.textContent = offline ? 'Offline' : 'Online';
+    modeTxt.textContent   = offline ? 'Offline KB' : 'Normal';
+  }
+
+  // =============================================
+  // 5. TOPIC SELECTOR
+  // =============================================
+  function setTopic(topic, btn) {
+    currentTopic = topic;
+    document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // =============================================
+  // 6. LANGUAGE CHANGE
+  // =============================================
+  function changeLanguage() {
+    currentLang = document.getElementById('langSelect').value;
+    if (recognition) recognition.lang = currentLang;
+  }
+
+  // =============================================
+  // 7. KEYBOARD HANDLER
+  // =============================================
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  // =============================================
+  // 8. SEND MESSAGE
+  // =============================================
+  function sendMessage(text) {
+    const input = document.getElementById('userInput');
+    const msg   = (text || input.value).trim();
+    if (!msg) return;
+    input.value = '';
+    input.style.height = 'auto';
+    userMessage(msg);
+    setTimeout(() => processQuery(msg), 600);
+  }
+
+  // =============================================
+  // 9. USER BUBBLE
+  // =============================================
+  function userMessage(text) {
+    msgCount++;
+    totalKBUsed += new Blob([text]).size;
+    updateStats();
+    const chat = document.getElementById('chatBox');
+    const div  = document.createElement('div');
+    div.className = 'message user';
+    div.innerHTML = `
+      <div class="avatar user-av">👤</div>
+      <div class="bubble">
+        ${escapeHtml(text)}
+        <div class="timestamp">${getTime()}</div>
+      </div>`;
+    chat.appendChild(div);
+    scrollDown();
+  }
+
+  // =============================================
+  // 10. BOT BUBBLE
+  // =============================================
+  function botMessage(text, suggestions = []) {
+    msgCount++;
+    totalKBUsed += new Blob([text]).size;
+    updateStats();
+    const chat = document.getElementById('chatBox');
+
+    // Typing indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot';
+    typingDiv.id = 'typing';
+    typingDiv.innerHTML = `
+      <div class="avatar bot-av">🌾</div>
+      <div class="bubble">
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+      </div>`;
+    chat.appendChild(typingDiv);
+    scrollDown();
+
+    // Show actual reply after short delay
+    setTimeout(() => {
+      typingDiv.remove();
+      const replyDiv = document.createElement('div');
+      replyDiv.className = 'message bot';
+      let chipHTML = '';
+      if (suggestions.length) {
+        chipHTML = `<div class="suggestions">${
+          suggestions.map(s => `<div class="chip" onclick="sendMessage('${s}')">${s}</div>`).join('')
+        }</div>`;
+      }
+      replyDiv.innerHTML = `
+        <div class="avatar bot-av">🌾</div>
+        <div class="bubble">
+          ${formatText(text)}
+          ${chipHTML}
+          <div class="timestamp">${getTime()}</div>
+        </div>`;
+      chat.appendChild(replyDiv);
+      scrollDown();
+      speak(stripMarkdown(text));
+    }, 900);
+  }
+
+  // =============================================
+  // 11. PROCESS QUERY (AI Logic)
+  // =============================================
+  function processQuery(query) {
+    const q = query.toLowerCase();
+
+    // Greeting detection
+    if (/^(hi|hello|namaste|hey|good morning|good evening|namaskar)/i.test(q)) {
+      botMessage(
+        "🙏 **Namaste!** How can I help you today?\nChoose a topic or ask me anything about farming, health, weather, or government schemes.",
+        getWelcomeSuggestions()
+      );
+      return;
+    }
+
+    // Help
+    if (/help|what can you do|features|capabilities/i.test(q)) {
+      botMessage(
+        "🤖 **I can help you with:**\n\n🌱 **Agriculture** — Crop advice, soil, pests, irrigation\n❤️ **Health** — First aid, disease symptoms, medicines\n🌦️ **Weather** — Monsoon, drought, seasonal tips\n🏛️ **Government** — PM-KISAN, Ayushman, Ration card, KCC\n📚 **Education** — Scholarships, literacy programs\n\n*Just type your question or use the 🎙️ mic button!*",
+        ['Tell me about rice farming', 'How to treat fever?', 'PM KISAN scheme details']
+      );
+      return;
+    }
+
+    // Search knowledge base
+    const allTopics = currentTopic === 'all'
+      ? Object.values(knowledgeBase).flat()
+      : (knowledgeBase[currentTopic] || Object.values(knowledgeBase).flat());
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (const entry of allTopics) {
+      let score = 0;
+      for (const keyword of entry.keywords) {
+        if (q.includes(keyword)) score++;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = entry;
+      }
+    }
+
+    if (bestMatch && bestScore > 0) {
+      botMessage(bestMatch.answer, getFollowUpSuggestions(currentTopic));
+    } else {
+      // Fallback response
+      botMessage(
+        "🤔 I couldn't find specific information about that in my local knowledge base.\n\n**Try asking about:**\n• Rice/Wheat farming tips\n• Fever or diarrhea treatment\n• PM-KISAN or Ayushman Bharat scheme\n• Monsoon or drought advisory\n\n📡 *If you have internet, I can search for more specific answers.*",
+        getWelcomeSuggestions()
+      );
+    }
+  }
+
+  // =============================================
+  // 12. SPEECH SYNTHESIS (TTS)
+  // =============================================
+  function speak(text) {
+    if (!synth) return;
+    synth.cancel();
+    const trimmed = text.substring(0, 200); // limit for bandwidth
+    const utterance = new SpeechSynthesisUtterance(trimmed);
+    utterance.lang  = currentLang;
+    utterance.rate  = 0.9;
+    utterance.pitch = 1;
+    synth.speak(utterance);
+  }
+
+  // =============================================
+  // 13. SPEECH RECOGNITION (STT)
+  // =============================================
+  function toggleMic() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition not supported in this browser. Try Chrome!');
+      return;
+    }
+
+    const micBtn = document.getElementById('micBtn');
+
+    if (isListening) {
+      recognition.stop();
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micBtn.textContent = '🎙️';
+      return;
+    }
+
+    recognition               = new SpeechRecognition();
+    recognition.lang          = currentLang;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      isListening = true;
+      micBtn.classList.add('listening');
+      micBtn.textContent = '⏹️';
+      document.getElementById('userInput').placeholder = '🎙️ Listening...';
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('userInput').value = transcript;
+      document.getElementById('userInput').placeholder = 'Ask about farming, health, weather...';
+    };
+
+    recognition.onerror = () => {
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micBtn.textContent = '🎙️';
+      document.getElementById('userInput').placeholder = 'Ask about farming, health, weather...';
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      micBtn.classList.remove('listening');
+      micBtn.textContent = '🎙️';
+      document.getElementById('userInput').placeholder = 'Ask about farming, health, weather...';
+    };
+
+    recognition.start();
+  }
+
+  // =============================================
+  // 14. HELPER FUNCTIONS
+  // =============================================
+  function getTime() {
+    return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function scrollDown() {
+    const chat = document.getElementById('chatBox');
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function updateStats() {
+    document.getElementById('msgCount').textContent = msgCount;
+    document.getElementById('kbUsed').textContent =
+      totalKBUsed < 1024
+        ? totalKBUsed + ' B'
+        : (totalKBUsed / 1024).toFixed(1) + ' KB';
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function formatText(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g,     '<em>$1</em>')
+      .replace(/\n/g,            '<br/>')
+      .replace(/•/g,             '<span style="color:var(--green)">•</span>');
+  }
+
+  function stripMarkdown(text) {
+    return text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/\n/g, '. ');
+  }
+
+  function getWelcomeSuggestions() {
+    return ['Rice farming tips', 'Treat fever at home', 'PM KISAN scheme', 'Flood advisory'];
+  }
+
+  function getFollowUpSuggestions(topic) {
+    const map = {
+      agriculture: ['Soil health tips', 'Drip irrigation', 'Pest control methods'],
+      health:      ['Snakebite treatment', 'Pregnancy care', 'First aid for wounds'],
+      weather:     ['Drought tips', 'Flood preparation', 'Best planting season'],
+      government:  ['Ayushman Bharat', 'Kisan Credit Card', 'Free ration scheme'],
+      education:   ['Scholarship for students', 'Adult literacy program'],
+      all:         ['Wheat farming', 'Fever treatment', 'PM KISAN payment']
+    };
+    return map[topic] || map['all'];
+  }
+</script>
+</body>
+</html>
