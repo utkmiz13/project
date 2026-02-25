@@ -1,0 +1,1503 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+// Utility function for conditional classes
+const cn = (...classes: (string | boolean | undefined)[]) => {
+  return classes.filter(Boolean).join(' ');
+};
+
+// Knowledge Base (from original app)
+const KB = {
+  agriculture: [
+    {
+      kw: ["rice", "paddy", "dhaan", "sowing rice", "transplant"],
+      a: `🌾 <b>Rice / Paddy Farming — Complete Guide</b><br><br>
+<b>Varieties:</b> IR-64, Swarna, MTU-1010, BPT-5204 (Sona Masoori), PR-106, HUR-36<br>
+<b>Sowing Season:</b> Kharif (June–July) | Rabi (Nov–Dec in some regions)<br>
+<b>Nursery:</b> Sow in nursery bed → transplant 25–30 day old seedlings<br>
+<b>Spacing:</b> 20×15 cm for higher yield | Direct seeding also works<br>
+<b>Water:</b> Keep 5 cm water up to panicle initiation; drain before harvest<br>
+<b>Fertilizer (per acre):</b> Urea 50 kg + DAP 25 kg + MOP 17 kg<br>&nbsp;&nbsp;Split Urea: Basal(¼) + Tillering(¼) + Panicle(½)<br>
+<b>Diseases:</b> Blast (spray Tricyclazole 6g/10L) | BLB (spray Copper Oxychloride)<br>
+<b>Pests:</b> Stem Borer (Chlorpyrifos 2ml/L) | Brown Planthopper (Imidacloprid)<br>
+<b>Yield:</b> 20–30 qt/acre (improved varieties up to 40 qt/acre)<br>
+<b>Post-harvest:</b> Dry to 14% moisture before storage`
+    },
+    {
+      kw: ["wheat", "gehu", "rabi", "winter crop", "wheat farming"],
+      a: `🌾 <b>Wheat Farming — Complete Guide</b><br><br>
+<b>Varieties:</b> HD-2967, HD-3086, PBW-343, DBW-187, Raj-4120<br>
+<b>Sowing Time:</b> Oct 25–Nov 25 (timely) | Dec (late sowing, use K-9107)<br>
+<b>Seed Rate:</b> 40–45 kg/acre for timely sowing<br>
+<b>Soil:</b> Well-drained loam or clay loam; pH 6.0–7.5<br>
+<b>Fertilizer:</b> 50 kg Urea + 25 kg DAP + 17 kg MOP per acre<br>&nbsp;&nbsp;Apply Urea in 3 splits: at sowing, 21 days, 42 days<br>
+<b>Irrigation:</b> 6 critical stages — CRI (21d), Tillering, Jointing, Flowering, Dough, Maturity<br>
+<b>Diseases:</b> Yellow Rust (Propiconazole 1ml/L) | Loose Smut (seed treatment with Vitavax)<br>
+<b>Harvest:</b> When grain moisture drops to 12–14%; use combine for large area<br>
+<b>Yield:</b> 18–22 qt/acre (improved varieties up to 28 qt/acre)`
+    },
+    {
+      kw: ["soil", "fertilizer", "nutrient", "compost", "soil health", "ph", "organic matter"],
+      a: `🌱 <b>Soil Health & Fertilizer Guide</b><br><br>
+<b>Soil Testing:</b> Test every 2–3 years at KVK or Soil Health Card centre<br>
+<b>Ideal pH:</b> 6.0–7.5 for most crops<br>&nbsp;&nbsp;If pH < 6: Add lime (Calcium carbonate) 100–200 kg/acre<br>&nbsp;&nbsp;If pH > 8: Add Gypsum or Sulphur 20 kg/acre<br>
+<b>NPK for General Crops:</b> Nitrogen:Phosphorus:Potassium = 4:2:1 ratio<br>
+<b>Organic Inputs:</b><br>
+&nbsp;&nbsp;• FYM (Farm Yard Manure): 2–4 tonnes/acre every season<br>
+&nbsp;&nbsp;• Vermicompost: 400–600 kg/acre — best for vegetables<br>
+&nbsp;&nbsp;• Green Manure (Dhaincha): Fixes 80–100 kg N/ha<br>
+<b>Micronutrients:</b> Zinc (ZnSO4 10 kg/acre), Boron, Iron for deficiency symptoms<br>
+<b>Signs of Deficiency:</b><br>
+&nbsp;&nbsp;• N deficiency: Yellow lower leaves<br>
+&nbsp;&nbsp;• P deficiency: Purple/reddish stems<br>
+&nbsp;&nbsp;• K deficiency: Scorched leaf edges`
+    },
+    {
+      kw: ["organic farming", "jaivik", "natural farming", "zero budget", "ZBNF"],
+      a: `🌿 <b>Organic / Natural Farming Guide</b><br><br>
+<b>Zero Budget Natural Farming (ZBNF):</b><br>
+&nbsp;&nbsp;• Jeevamrit: 10 kg cow dung + 10L cow urine + 2 kg jaggery + 2 kg flour + 50L water<br>&nbsp;&nbsp;Apply 200L/acre every 15 days<br>
+&nbsp;&nbsp;• Bijamrit: Seed treatment with cow dung + lime + water<br>
+&nbsp;&nbsp;• Mulching with crop residue or dry leaves<br>
+<b>Organic Certification:</b><br>
+&nbsp;&nbsp;• PGS-India (Participatory Guarantee System) — free, village level<br>
+&nbsp;&nbsp;• Third-party certification for export markets<br>
+<b>Benefits:</b> Reduced input cost, healthy soil, premium price for organic produce<br>
+<b>Market:</b> Sell at organic mandis or through FPOs for 20–30% premium`
+    },
+    {
+      kw: ["vegetable", "tomato", "onion", "potato", "capsicum", "brinjal", "vegetable farming"],
+      a: `🥦 <b>Vegetable Farming — Key Tips</b><br><br>
+<b>Tomato:</b><br>
+&nbsp;&nbsp;• Season: Sep–Oct (Rabi) / Jan–Feb (Summer)<br>
+&nbsp;&nbsp;• Spacing: 75×45 cm | Transplant 25–30 day old seedlings<br>
+&nbsp;&nbsp;• Common disease: Early Blight — spray Mancozeb 2g/L<br>
+<b>Onion:</b><br>
+&nbsp;&nbsp;• Rabi onion: Oct–Nov nursery | Transplant Dec<br>
+&nbsp;&nbsp;• Kharif onion: June nursery | Transplant Aug<br>
+&nbsp;&nbsp;• Apply Urea at 30 and 60 DAS<br>
+<b>General Tips:</b><br>
+&nbsp;&nbsp;• Use drip + mulch for vegetables<br>
+&nbsp;&nbsp;• Apply micronutrients for quality produce<br>
+&nbsp;&nbsp;• Harvest in cool morning hours for better shelf life`
+    }
+  ],
+
+  health: [
+    {
+      kw: ["fever", "temperature", "high fever", "malaria", "dengue", "flu"],
+      a: `🌡️ <b>Fever — Diagnosis & Treatment</b><br><br>
+<b>Common Causes:</b> Malaria, Dengue, Typhoid, Viral flu, UTI<br>
+<b>Immediate Steps:</b><br>
+&nbsp;&nbsp;• Drink ORS / coconut water / plain water every hour<br>
+&nbsp;&nbsp;• Sponge forehead with lukewarm water cloth<br>
+&nbsp;&nbsp;• Take Paracetamol 500mg (adults) every 6 hours if >100°F<br>
+&nbsp;&nbsp;• Rest completely; avoid heavy work<br>
+<b>⚠️ Go to Doctor IMMEDIATELY if:</b><br>
+&nbsp;&nbsp;• Fever > 103°F (39.5°C)<br>
+&nbsp;&nbsp;• Lasts more than 3 days<br>
+&nbsp;&nbsp;• With rash, severe headache, vomiting, fits<br>
+&nbsp;&nbsp;• Child below 5 years has any fever<br>
+<b>Malaria Signs:</b> Shivering, sweating cycles, chills every 2–3 days → Get blood test<br>
+<b>Dengue Signs:</b> Severe body/eye pain, rash on body, platelet drop → Urgent hospital care<br>
+<b>Helpline:</b> 104 (Health Helpline, free)`
+    },
+    {
+      kw: ["diarrhea", "loose motion", "stomach", "vomit", "cholera", "dehydration"],
+      a: `💊 <b>Diarrhea & Dehydration — Complete Guide</b><br><br>
+<b>Most Important — ORS:</b><br>
+&nbsp;&nbsp;• Commercial ORS packet (Electral/Jeevan Jal) in 1 litre clean water<br>
+&nbsp;&nbsp;• Home ORS: 1L water + 6 tsp sugar + ½ tsp salt — stir well<br>
+&nbsp;&nbsp;• Give 200ml after every loose stool<br>
+<b>What to Eat:</b> Plain rice, khichdi, banana, curd rice, toast<br>
+<b>Avoid:</b> Oily food, spicy food, milk, raw vegetables, street food<br>
+<b>Children Under 5:</b><br>
+&nbsp;&nbsp;• Continue breastfeeding during diarrhea<br>
+&nbsp;&nbsp;• Zinc tablets (20mg/day for 14 days) reduces severity<br>
+&nbsp;&nbsp;• If child becomes very weak, sunken eyes → Emergency<br>
+<b>Signs of Severe Dehydration:</b><br>
+&nbsp;&nbsp;• No urine for 6+ hours | Sunken eyes | Dry mouth | Weakness<br>
+&nbsp;&nbsp;→ Rush to hospital for IV fluid immediately<br>
+<b>Prevention:</b><br>
+&nbsp;&nbsp;• Wash hands with soap before eating and after toilet<br>
+&nbsp;&nbsp;• Boil drinking water or use Aquatabs (chlorine tablets)`
+    },
+    {
+      kw: ["snakebite", "snake bite", "snake", "viper", "cobra", "krait"],
+      a: `🐍 <b>Snakebite — EMERGENCY First Aid</b><br><br>
+<b>WHAT TO DO:</b><br>
+&nbsp;&nbsp;✅ Keep the person CALM — panic increases venom spread<br>
+&nbsp;&nbsp;✅ Immobilize the bitten limb with a splint/stick<br>
+&nbsp;&nbsp;✅ Keep bitten limb BELOW heart level<br>
+&nbsp;&nbsp;✅ Remove rings, watches, tight clothing near bite<br>
+&nbsp;&nbsp;✅ Mark the time of bite with pen on skin<br>
+&nbsp;&nbsp;✅ Rush to NEAREST HOSPITAL IMMEDIATELY<br>
+&nbsp;&nbsp;✅ Call 108 ambulance<br><br>
+<b>⛔ WHAT NOT TO DO (causes more harm):</b><br>
+&nbsp;&nbsp;❌ Do NOT cut the wound or suck the venom<br>
+&nbsp;&nbsp;❌ Do NOT tie a tourniquet or tight bandage<br>
+&nbsp;&nbsp;❌ Do NOT apply herbs, mud, or fire on wound<br>
+&nbsp;&nbsp;❌ Do NOT give food, water, or alcohol<br>
+<b>Anti-Snake Venom (ASV):</b><br>
+&nbsp;&nbsp;• Available FREE at all government hospitals<br>
+&nbsp;&nbsp;• Must be given within 4–6 hours for best effect`
+    },
+    {
+      kw: ["first aid", "wound", "cut", "bleeding", "burn", "fracture", "accident", "injury"],
+      a: `🩹 <b>First Aid Guide — Common Emergencies</b><br><br>
+<b>Deep Cuts & Bleeding:</b><br>
+&nbsp;&nbsp;• Apply firm pressure with clean cloth for 10 minutes<br>
+&nbsp;&nbsp;• Raise injured part above heart level<br>
+&nbsp;&nbsp;• Clean wound with clean water (not spirit initially)<br>
+&nbsp;&nbsp;• Apply antiseptic cream; bandage properly<br>
+&nbsp;&nbsp;• If deep/gaping wound — needs stitching at hospital<br>
+<b>Burns:</b><br>
+&nbsp;&nbsp;• Run COOL (not ice cold) water for 10–20 minutes<br>
+&nbsp;&nbsp;• Remove jewellery/clothes from burn area (if not stuck)<br>
+&nbsp;&nbsp;• Cover with clean cloth; do NOT apply oil, toothpaste, or butter<br>
+&nbsp;&nbsp;• Burns > size of palm or on face/hands → Hospital immediately<br>
+<b>Fractures / Broken Bone:</b><br>
+&nbsp;&nbsp;• Do NOT try to straighten the bone<br>
+&nbsp;&nbsp;• Immobilize with stick/splint on both sides<br>
+&nbsp;&nbsp;• Support with cloth/bandage; handle gently<br>
+<b>CPR (Basic):</b> 30 chest compressions (hard & fast) + 2 rescue breaths; repeat`
+    },
+    {
+      kw: ["pregnancy", "pregnant", "delivery", "maternal", "antenatal", "baby birth", "garbh"],
+      a: `🤱 <b>Pregnancy & Maternal Health — Full Guide</b><br><br>
+<b>Register Early:</b> Visit PHC/Sub-Centre within 12 weeks of pregnancy<br>
+<b>4 ANC Checkups Schedule:</b><br>
+&nbsp;&nbsp;• 1st: Before 12 weeks (confirm pregnancy, blood test)<br>
+&nbsp;&nbsp;• 2nd: 14–26 weeks (ultrasound, BP check)<br>
+&nbsp;&nbsp;• 3rd: 28–34 weeks (position of baby)<br>
+&nbsp;&nbsp;• 4th: 36 weeks onwards (delivery planning)<br>
+<b>Daily Supplements (Free at PHC):</b><br>
+&nbsp;&nbsp;• Iron & Folic Acid (IFA) tablets — start from 12 weeks<br>
+&nbsp;&nbsp;• Calcium tablets — from 2nd trimester<br>
+<b>Danger Signs → Rush to Hospital:</b><br>
+&nbsp;&nbsp;• Heavy bleeding | Fits/seizures | Severe headache<br>
+&nbsp;&nbsp;• Baby not moving for 12 hours | High BP<br>
+<b>Government Benefits:</b><br>
+&nbsp;&nbsp;• Janani Suraksha Yojana (JSY): ₹1400 cash for institutional delivery<br>
+&nbsp;&nbsp;• PMSMA: Free checkup on 9th of every month at govt hospitals<br>
+<b>Helpline:</b> PHC/CHC or 108`
+    }
+  ],
+
+  weather: [
+    {
+      kw: ["rain", "monsoon", "rainfall", "flood", "water logging"],
+      a: `🌧️ <b>Monsoon & Flood Preparedness</b><br><br>
+<b>Before Monsoon:</b><br>
+&nbsp;&nbsp;• Clean drainage channels around your field and home<br>
+&nbsp;&nbsp;• Store 15 days food, clean water (10L/person), medicines<br>
+&nbsp;&nbsp;• Repair roof, walls, and cattle shed<br>
+&nbsp;&nbsp;• Note nearest high ground / relief camp location<br>
+<b>During Heavy Rain / Flood:</b><br>
+&nbsp;&nbsp;• Move to higher ground immediately if water enters home<br>
+&nbsp;&nbsp;• Do NOT cross flooded roads, rivers, or streams<br>
+&nbsp;&nbsp;• Keep children and elderly away from water<br>
+&nbsp;&nbsp;• Turn off gas cylinders and electrical mains<br>
+<b>After Flood:</b><br>
+&nbsp;&nbsp;• Do not eat food that has been in floodwater<br>
+&nbsp;&nbsp;• Bleach home surfaces to prevent disease<br>
+&nbsp;&nbsp;• Watch for snakes that may enter homes after flooding<br>
+<b>For Farmers:</b><br>
+&nbsp;&nbsp;• File crop loss claim within 72 hours of damage<br>
+&nbsp;&nbsp;• PMFBY insurance claim: Contact insurance company or banker<br>
+<b>Emergency: NDRF Helpline 1078 | Ambulance 108`
+    },
+    {
+      kw: ["drought", "dry", "water shortage", "heat wave", "garmi", "heatstroke"],
+      a: `☀️ <b>Drought & Heat Wave Survival Guide</b><br><br>
+<b>Personal Safety in Heat Wave:</b><br>
+&nbsp;&nbsp;• Drink 3–4 litres of water/day; add ORS if sweating heavily<br>
+&nbsp;&nbsp;• Avoid going out between 12 PM – 4 PM<br>
+&nbsp;&nbsp;• Wear light-coloured, loose cotton clothes<br>
+&nbsp;&nbsp;• Eat light meals; avoid heavy, oily food<br>
+<b>Heatstroke Signs (Emergency!):</b><br>
+&nbsp;&nbsp;• Body temp > 40°C, confusion, not sweating, unconscious<br>
+&nbsp;&nbsp;• ACTION: Move to shade, cool with wet cloth, rush to hospital<br>
+<b>Drought-Resistant Crops:</b><br>
+&nbsp;&nbsp;• Bajra, Jowar, Moth Bean, Cowpea, Cluster Bean<br>
+&nbsp;&nbsp;• Castor, Sesame, Groundnut (short-duration varieties)<br>
+<b>Water Conservation:</b><br>
+&nbsp;&nbsp;• Mulching reduces soil moisture loss by 30–40%<br>
+&nbsp;&nbsp;• Farm ponds for rainwater storage<br>
+&nbsp;&nbsp;• Switch to drip irrigation (50% water saving)<br>
+<b>Govt Relief:</b> Report crop loss to Patwari/Tehsildar for drought relief compensation`
+    },
+    {
+      kw: ["weather", "forecast", "temperature", "season", "climate", "barish kab"],
+      a: `🌤️ <b>Weather Advisory for Farmers</b><br><br>
+<b>Free Weather Apps/Services:</b><br>
+&nbsp;&nbsp;• <b>Meghdoot App</b> — village-level 5-day forecast for farmers (offline capable)<br>
+&nbsp;&nbsp;• <b>Kisan Suvidha App</b> — weather + crop advisory + market prices<br>
+&nbsp;&nbsp;• <b>Damini App</b> — lightning alerts (very useful!)<br>
+&nbsp;&nbsp;• SMS service: Send your pin code to 7738299899 (IMD)<br>
+<b>Seasonal Calendar:</b><br>
+&nbsp;&nbsp;• Kharif sowing: June 15–July 15 (after 1st good monsoon rain)<br>
+&nbsp;&nbsp;• Rabi sowing: Oct 15–Nov 30<br>
+&nbsp;&nbsp;• Zaid season: Feb–May (short-duration crops)<br>
+<b>Farming Weather Rules:</b><br>
+&nbsp;&nbsp;• Don't spray pesticides if rain expected in 24 hours<br>
+&nbsp;&nbsp;• Plant on cloudy days to reduce transplant shock<br>
+&nbsp;&nbsp;• Harvest before predicted rain to avoid crop damage<br>
+<b>IMD Helpline:</b> 1800-180-1717 (free weather inquiry)`
+    }
+  ],
+
+  government: [
+    {
+      kw: ["pm kisan", "pmkisan", "kisan samman", "6000", "farmer payment", "installment"],
+      a: `🏛️ <b>PM-KISAN Samman Nidhi — Complete Guide</b><br><br>
+<b>Benefit:</b> ₹6,000/year in 3 installments of ₹2,000 each<br>
+<b>Who can apply:</b> All small & marginal farmers with cultivable land<br>
+<b>Not Eligible:</b> Government employees, taxpayers, professionals (doctors, lawyers)<br>
+<b>Documents Needed:</b><br>
+&nbsp;&nbsp;• Aadhaar card (mandatory)<br>
+&nbsp;&nbsp;• Bank account linked to Aadhaar<br>
+&nbsp;&nbsp;• Land records (Khasra/Khatauni)<br>
+&nbsp;&nbsp;• Mobile number<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;1. Visit pmkisan.gov.in → New Farmer Registration<br>
+&nbsp;&nbsp;2. OR go to nearest CSC (Common Service Centre)<br>
+&nbsp;&nbsp;3. OR contact Patwari / Agriculture Officer<br>
+<b>Check Payment Status:</b><br>
+&nbsp;&nbsp;• pmkisan.gov.in → Beneficiary Status<br>
+&nbsp;&nbsp;• SMS: PM-KISAN REG to 155261<br>
+<b>Helpline:</b> 155261 | 011-24300606 (Mon–Fri, 9am–6pm)<br>
+<b>eKYC:</b> Must do eKYC at CSC or pmkisan.gov.in to continue getting payments`
+    },
+    {
+      kw: ["ayushman", "pmjay", "health card", "golden card", "free hospital", "5 lakh", "free treatment"],
+      a: `🏥 <b>Ayushman Bharat PMJAY — Health Insurance</b><br><br>
+<b>Benefit:</b> FREE health cover up to ₹5 lakh per family per year<br>
+<b>Covers:</b> Hospitalization, surgery, ICU, medicines, diagnostics (1500+ procedures)<br>
+<b>Who is Eligible:</b> SECC-2011 listed families + State-added beneficiaries<br>
+<b>Check Eligibility:</b><br>
+&nbsp;&nbsp;• Visit mera.pmjay.gov.in<br>
+&nbsp;&nbsp;• Call 14555 (free helpline)<br>
+&nbsp;&nbsp;• Visit nearest Ayushman Mitra at empanelled hospital<br>
+<b>Get Ayushman Card:</b><br>
+&nbsp;&nbsp;• Visit nearest CSC or empanelled hospital<br>
+&nbsp;&nbsp;• Need: Aadhaar + Mobile number<br>
+&nbsp;&nbsp;• Card is FREE to make<br>
+<b>How to Avail Treatment:</b><br>
+&nbsp;&nbsp;1. Show Ayushman card at empanelled hospital<br>
+&nbsp;&nbsp;2. Cashless treatment — NO advance payment needed<br>
+&nbsp;&nbsp;3. Works at 25,000+ hospitals across India<br>
+<b>Ab Har Ghar Ayushman:</b> Now covers all citizens above 70 years<br>
+<b>Helpline:</b> 14555 | 1800-111-565 (24x7 free)`
+    },
+    {
+      kw: ["kcc", "kisan credit card", "farmer loan", "crop loan", "bank loan", "interest subsidy"],
+      a: `🏦 <b>Kisan Credit Card (KCC) — Farmer Loan</b><br><br>
+<b>Benefit:</b> Revolving credit for farming at only <b>4% effective interest</b> (with 3% subvention)<br>
+<b>Credit Limit:</b> Based on landholding + crop scale of finance<br>&nbsp;&nbsp;(Typically ₹1.6 lakh for 1 acre rice/wheat)<br>
+<b>Who can apply:</b> All farmers, tenant farmers, sharecroppers, SHG members<br>
+<b>Documents:</b><br>
+&nbsp;&nbsp;• Aadhaar + PAN card<br>
+&nbsp;&nbsp;• Land records (Khasra / Khatauni)<br>
+&nbsp;&nbsp;• Passport photo<br>
+&nbsp;&nbsp;• Bank account<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit nearest nationalized bank branch (SBI, PNB, Canara, etc.)<br>
+&nbsp;&nbsp;• OR apply online on bank's website / PM-KISAN portal<br>
+<b>Validity:</b> 5 years with annual renewal<br>
+<b>Additional Benefits:</b><br>
+&nbsp;&nbsp;• Automatic crop insurance under PMFBY<br>
+&nbsp;&nbsp;• Personal accident cover ₹50,000<br>
+<b>Kisan Helpline:</b> 1800-180-1551 (free)`
+    },
+    {
+      kw: ["pmfby", "crop insurance", "fasal bima", "crop loss claim"],
+      a: `🌾 <b>PM Fasal Bima Yojana (PMFBY) — Crop Insurance</b><br><br>
+<b>What it covers:</b> Crop loss due to drought, flood, pest, disease, hailstorm<br>
+<b>Premium (Very Low):</b><br>
+&nbsp;&nbsp;• Kharif crops: 2% of Sum Insured<br>
+&nbsp;&nbsp;• Rabi crops: 1.5% of Sum Insured<br>
+&nbsp;&nbsp;• Horticulture: 5% of Sum Insured<br>
+<b>How to Enroll:</b><br>
+&nbsp;&nbsp;• KCC farmers: Auto-enrolled (may opt-out if desired)<br>
+&nbsp;&nbsp;• Non-KCC: Apply at bank, CSC, or pmfby.gov.in<br>
+&nbsp;&nbsp;• Deadline: 15 days before sowing cutoff date<br>
+<b>How to Claim:</b><br>
+&nbsp;&nbsp;1. Intimate loss to insurance company within 72 hours of damage<br>
+&nbsp;&nbsp;2. Call crop loss helpline: 14447<br>
+&nbsp;&nbsp;3. OR notify through bank or CSC<br>
+<b>Claim Processing:</b> Within 30 days of harvest; directly to bank account<br>
+<b>Mid-Season Calamity:</b> 25% advance payment given immediately<br>
+<b>Helpline:</b> 14447 | pmfby.gov.in`
+    },
+    {
+      kw: ["mgnrega", "nrega", "mahatma gandhi", "job card", "100 days work", "mnrega"],
+      a: `🏗️ <b>MGNREGA — 100 Days Work Guarantee</b><br><br>
+<b>What it is:</b> Legal guarantee of 100 days paid work per household per year<br>
+<b>Wage:</b> State-wise wage (₹220–₹357/day); paid directly to bank/PO account<br>
+<b>Who can apply:</b> Any adult rural household member (willing to do unskilled work)<br>
+<b>How to Register:</b><br>
+&nbsp;&nbsp;• Visit Gram Panchayat with Aadhaar + photo<br>
+&nbsp;&nbsp;• Get Job Card (free, within 15 days of application)<br>
+<b>How to Get Work:</b><br>
+&nbsp;&nbsp;• Write application to Gram Panchayat requesting work<br>
+&nbsp;&nbsp;• Work must be provided within 15 days or unemployment allowance paid<br>
+<b>Type of Work:</b> Water conservation, road construction, planting trees, farm ponds, etc.<br>
+<b>Check Work & Payment:</b><br>
+&nbsp;&nbsp;• nrega.nic.in → Enter state → district → Gram Panchayat<br>
+&nbsp;&nbsp;• NREGASoft App<br>
+<b>Helpline:</b> 1800-111-555 (free)`
+    }
+  ],
+
+  education: [
+    {
+      kw: ["scholarship", "study", "school fees", "student", "student scholarship", "chhatravritti"],
+      a: `📚 <b>Student Scholarships — Complete List</b><br><br>
+<b>1. National Means-cum-Merit Scholarship (NMMS):</b><br>
+&nbsp;&nbsp;• ₹12,000/year for Class 9–12<br>
+&nbsp;&nbsp;• For govt school students; family income < ₹3.5 lakh/year<br>
+&nbsp;&nbsp;• Apply through State Scholarship Portal<br>
+<b>2. Pre-Matric Scholarship (Class 1–10):</b><br>
+&nbsp;&nbsp;• For SC/ST/OBC/Minority students<br>
+&nbsp;&nbsp;• Amount: ₹150–₹350/month + ₹750 one-time grant<br>
+<b>3. Post-Matric Scholarship (Class 11 onwards):</b><br>
+&nbsp;&nbsp;• Full tuition fees + maintenance allowance<br>
+&nbsp;&nbsp;• For SC (Ministry of Social Justice) / ST (Ministry of Tribal) / OBC / Minority<br>
+<b>4. Begum Hazrat Mahal (Minority Girls):</b><br>
+&nbsp;&nbsp;• ₹5,000–₹6,000/year for Class 9–12<br>
+<b>Apply at:</b> scholarships.gov.in (National Scholarship Portal)<br>
+<b>Documents:</b> Marksheet, caste/income certificate, Aadhaar, bank account<br>
+<b>Helpline:</b> 0120-6619540`
+    },
+    {
+      kw: ["literacy", "read", "write", "learn", "adult education", "ULLAS", "padna", "likhna"],
+      a: `📖 <b>Adult Literacy & ULLAS Program</b><br><br>
+<b>ULLAS (New India Literacy Program):</b><br>
+&nbsp;&nbsp;• FREE education for adults 15 years and above<br>
+&nbsp;&nbsp;• Goal: Make 5 crore people literate by 2027<br>
+&nbsp;&nbsp;• Covers: Reading, writing, numeracy, digital skills, financial literacy<br>
+<b>How to Join:</b><br>
+&nbsp;&nbsp;• Visit nearest primary school or Gram Panchayat<br>
+&nbsp;&nbsp;• Contact headmaster or ASHA/Anganwadi worker<br>
+&nbsp;&nbsp;• No age limit, no fees, no exams to join<br>
+<b>Classes:</b> Morning or evening sessions at local school (flexible timing)<br>
+<b>Materials:</b> Free books in regional languages (provided by government)<br>
+<b>Volunteer Teachers:</b> School students teach adults in their community<br>
+<b>Digital Literacy:</b><br>
+&nbsp;&nbsp;• PMGDISHA: Free digital training (internet, phone, UPI, email)<br>
+&nbsp;&nbsp;• 3 months course at nearest CSC<br>
+&nbsp;&nbsp;• pmgdisha.in to find nearest centre<br>
+<b>Helpline:</b> 1800-180-9588`
+    }
+  ],
+
+  livestock: [
+    {
+      kw: ["cow", "cattle", "buffalo", "dairy", "milk", "pashu", "gai", "bhains"],
+      a: `🐄 <b>Cattle & Buffalo Farming Guide</b><br><br>
+<b>High-Yield Breeds:</b><br>
+&nbsp;&nbsp;• Cows: HF (Holstein Friesian), Jersey, Gir, Sahiwal<br>
+&nbsp;&nbsp;• Buffaloes: Murrah, Surti, Jaffarabadi<br>
+&nbsp;&nbsp;• Hybrid cows: HF×Sahiwal cross — best for small farmers<br>
+<b>Feeding (per animal per day):</b><br>
+&nbsp;&nbsp;• Dry fodder: 5–10 kg (straw/silage)<br>
+&nbsp;&nbsp;• Green fodder: 15–20 kg (Napier grass, maize, bajra)<br>
+&nbsp;&nbsp;• Concentrate: 1–1.5 kg per 2.5 litre milk produced<br>
+&nbsp;&nbsp;• Clean water: 40–60 litres/day<br>
+&nbsp;&nbsp;• Mineral mixture: 50g/day (prevents milk fever, reproductive issues)<br>
+<b>Vaccination Schedule (Mandatory):</b><br>
+&nbsp;&nbsp;• FMD (Foot & Mouth Disease): Every 6 months (FREE by govt)<br>
+&nbsp;&nbsp;• HS (Hemorrhagic Septicemia): Before monsoon every year<br>
+&nbsp;&nbsp;• BQ (Black Quarter): Annually before monsoon<br>
+<b>Deworming:</b> Every 6 months with Albendazole (10mg/kg body weight)<br>
+<b>Housing:</b> Clean shed, 40 sq ft/animal, proper drainage, no dampness<br>
+<b>Helpline:</b> 1962 (Pashu Helpline, free 24×7)`
+    },
+    {
+      kw: ["goat", "bakri", "sheep", "sheep farming", "goat rearing", "small ruminant"],
+      a: `🐐 <b>Goat & Sheep Farming Guide</b><br><br>
+<b>Popular Breeds:</b><br>
+&nbsp;&nbsp;• Goat (Meat): Boer, Sirohi, Barbari, Osmanabadi<br>
+&nbsp;&nbsp;• Goat (Milk): Jamunapari, Beetal<br>
+&nbsp;&nbsp;• Sheep (Wool): Merino, Chokla | Sheep (Meat): Nellore, Deccani<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Pasture grazing 6–8 hours/day<br>
+&nbsp;&nbsp;• Supplement with 200–300g concentrate for pregnant/lactating goats<br>
+&nbsp;&nbsp;• Mineral block should always be available<br>
+<b>Health Management:</b><br>
+&nbsp;&nbsp;• PPR Vaccination (Goat Plague): Every year (FREE at govt vet centre)<br>
+&nbsp;&nbsp;• Enterotoxaemia (ET): Annually before monsoon<br>
+&nbsp;&nbsp;• FMD: Every 6 months for goats in endemic areas<br>
+&nbsp;&nbsp;• Deworming: Every 3 months<br>
+<b>Common Problems:</b><br>
+&nbsp;&nbsp;• Bloat (gas in stomach): Stand goat upright, massage, give 50ml mustard oil<br>
+&nbsp;&nbsp;• Diarrhea: ORS + electrolytes + consult vet<br>
+<b>Profit Potential:</b> Goat gives 2 kids/year; market value ₹3,000–₹8,000/kid`
+    },
+    {
+      kw: ["poultry", "chicken", "hen", "murgi", "egg", "backyard poultry", "broiler", "layer"],
+      a: `🐓 <b>Poultry Farming Guide</b><br><br>
+<b>Types:</b><br>
+&nbsp;&nbsp;• Layer birds: Egg production (300+ eggs/year per hen)<br>
+&nbsp;&nbsp;• Broiler birds: Meat in 6 weeks (1.8–2 kg body weight)<br>
+&nbsp;&nbsp;• Backyard poultry (Desi/Kadaknath): Low cost, high price<br>
+<b>Housing:</b><br>
+&nbsp;&nbsp;• 1 sq ft/bird (cage) or 2 sq ft (floor)<br>
+&nbsp;&nbsp;• Ventilation, no dampness, protection from rain and predators<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Starter feed (0–3 weeks): 23% protein<br>
+&nbsp;&nbsp;• Grower feed (3–6 weeks): 20% protein<br>
+&nbsp;&nbsp;• Layer feed: 16% protein + extra calcium<br>
+<b>Vaccination:</b><br>
+&nbsp;&nbsp;• Ranikhet (ND): Day 7 + Day 28 + every 3 months<br>
+&nbsp;&nbsp;• Gumboro (IBD): Day 14 + Day 28<br>
+&nbsp;&nbsp;• Fowl Pox: 6 weeks of age<br>
+<b>Biosecurity:</b> Keep visitors away; disinfect shed regularly<br>
+<b>Helpline:</b> 1962 Pashu Helpline`
+    }
+  ],
+
+  finance: [
+    {
+      kw: ["save money", "saving", "bachat", "savings", "piggy bank", "recurring deposit"],
+      a: `💰 <b>Smart Savings for Rural Families</b><br><br>
+<b>Post Office Savings Schemes:</b><br>
+&nbsp;&nbsp;• <b>Sukanya Samriddhi (for girl child):</b> 8.2% interest — best scheme!<br>&nbsp;&nbsp;Min ₹250/year; max ₹1.5 lakh/year; tax-free maturity<br>
+&nbsp;&nbsp;• <b>PPF (Public Provident Fund):</b> 7.1% interest, 15-year lock-in, tax-free<br>
+&nbsp;&nbsp;• <b>NSC (National Savings Certificate):</b> 7.7%, 5-year deposit, guaranteed<br>
+&nbsp;&nbsp;• <b>RD (Recurring Deposit):</b> Save ₹100/month; good for regular income families<br>
+<b>Jan Dhan Account:</b><br>
+&nbsp;&nbsp;• Zero balance account at any bank<br>
+&nbsp;&nbsp;• Comes with RuPay debit card + ₹2 lakh accident insurance FREE<br>
+&nbsp;&nbsp;• Overdraft facility of ₹10,000 after 6 months<br>
+<b>Financial Tips:</b><br>
+&nbsp;&nbsp;• Avoid money lenders — interest 2–5% per month is exploitative<br>
+&nbsp;&nbsp;• Use SHG (Self Help Group) for micro-savings and credit<br>
+&nbsp;&nbsp;• Never put all savings in one place<br>
+<b>Open account at:</b> Any nationalized bank or post office (Aadhaar required)`
+    },
+    {
+      kw: ["shg", "self help group", "mahila mandal", "women group", "micro finance", "bachat gat"],
+      a: `👩‍👩‍👧 <b>Self Help Groups (SHG) — How to Benefit</b><br><br>
+<b>What is SHG?</b> Group of 10–20 women who save together and support each other<br>
+<b>Benefits of Joining SHG:</b><br>
+&nbsp;&nbsp;• Pool savings → get loans at low interest (1–2%/month)<br>
+&nbsp;&nbsp;• No collateral needed for loans<br>
+&nbsp;&nbsp;• Bank loan linkage: ₹1–10 lakh for group business<br>
+&nbsp;&nbsp;• Government schemes accessed easily as a group<br>
+<b>How to Form SHG:</b><br>
+&nbsp;&nbsp;• 10–20 women from same village/locality<br>
+&nbsp;&nbsp;• Open a group bank account<br>
+&nbsp;&nbsp;• Save ₹50–₹200/month each; maintain records<br>
+&nbsp;&nbsp;• Register with Block Development Office for recognition<br>
+<b>Government Support:</b><br>
+&nbsp;&nbsp;• NRLM (DAY-NRLM): Revolving fund ₹15,000 + Community Investment Fund<br>
+&nbsp;&nbsp;• Bank loan at 7% interest (subsidized)<br>
+&nbsp;&nbsp;• Lakhpati Didi program: Help each SHG member earn ₹1 lakh/year<br>
+<b>Contact:</b> Gram Panchayat or Block Mission Management Unit`
+    },
+    {
+      kw: ["mudra loan", "business loan", "small business", "self employment", "startup loan", "enterprise"],
+      a: `🏢 <b>MUDRA Loan — Business Finance</b><br><br>
+<b>PM MUDRA Yojana:</b> Loans for small/micro businesses without collateral<br>
+<b>Three Categories:</b><br>
+&nbsp;&nbsp;• <b>Shishu:</b> Up to ₹50,000 (new/very small businesses)<br>
+&nbsp;&nbsp;• <b>Kishore:</b> ₹50,001 to ₹5 lakh (growing businesses)<br>
+&nbsp;&nbsp;• <b>Tarun:</b> ₹5 lakh to ₹10 lakh (established businesses)<br>
+<b>Who can apply:</b><br>
+&nbsp;&nbsp;• Any non-farm micro/small business<br>
+&nbsp;&nbsp;• Street vendors, shops, artisans, tailors, repair shops<br>
+&nbsp;&nbsp;• Vegetable/fruit sellers, food stalls, beauty parlours<br>
+<b>Documents:</b> Aadhaar + PAN + bank statement + business proof/plan<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit any bank or NBFC branch<br>
+&nbsp;&nbsp;• Apply online: mudra.org.in<br>
+&nbsp;&nbsp;• Or through Udyami Mitra portal<br>
+<b>Interest Rate:</b> 10–12% (varies by bank; no collateral for Shishu/Kishore)<br>
+<b>Helpline:</b> 1800-180-1111 (SIDBI)`
+    }
+  ],
+
+  market: [
+    {
+      kw: ["market price", "mandi", "sabzi", "vegetable price", "crop price", "mandibhav", "wholesale"],
+      a: `📊 <b>Crop Market Price Information</b><br><br>
+<b>Where to Check Live Mandi Prices (Free):</b><br>
+&nbsp;&nbsp;• <b>Agmarknet:</b> agmarknet.nic.in — official govt mandi prices<br>
+&nbsp;&nbsp;• <b>eNAM Portal:</b> enam.gov.in — national electronic market<br>
+&nbsp;&nbsp;• <b>Kisan Suvidha App:</b> Market prices + weather + crop advisory<br>
+&nbsp;&nbsp;• <b>SMS:</b> Send crop name + state to 55444 for price<br>
+<b>MSP (Minimum Support Price) 2024–25:</b><br>
+&nbsp;&nbsp;• Paddy (Common): ₹2,300/quintal<br>
+&nbsp;&nbsp;• Wheat: ₹2,275/quintal<br>
+&nbsp;&nbsp;• Maize: ₹2,090/quintal<br>
+&nbsp;&nbsp;• Tur Dal: ₹7,550/quintal<br>
+&nbsp;&nbsp;• Cotton (Medium): ₹7,121/quintal<br>
+<b>Sell at MSP:</b><br>
+&nbsp;&nbsp;• Register on PM-KISAN/State portal for MSP procurement<br>
+&nbsp;&nbsp;• Bring produce to nearest procurement centre with Aadhaar + land record<br>
+<b>FPO/Cooperatives:</b> Join for better collective bargaining and direct market access`
+    },
+    {
+      kw: ["fpo", "farmer producer", "cooperative", "collective farming", "group selling"],
+      a: `🤝 <b>Farmer Producer Organizations (FPO) Guide</b><br><br>
+<b>What is FPO?</b> A group of farmers who collectively produce, process and sell their produce<br>
+<b>Benefits of Joining FPO:</b><br>
+&nbsp;&nbsp;• Buy inputs (seed, fertilizer) at wholesale rates — saves 15–20%<br>
+&nbsp;&nbsp;• Sell produce directly to buyers — better price<br>
+&nbsp;&nbsp;• Access to cold storage, processing facilities<br>
+&nbsp;&nbsp;• Bank loan as group is easier<br>
+&nbsp;&nbsp;• Export directly to foreign markets<br>
+<b>Government Support for FPOs:</b><br>
+&nbsp;&nbsp;• ₹18 lakh equity grant per FPO under Agri Infrastructure Fund<br>
+&nbsp;&nbsp;• NABARD + SFAC provide handholding support<br>
+&nbsp;&nbsp;• 3 year support from Cluster Based Business Organisations (CBBO)<br>
+<b>10,000 FPO Scheme:</b><br>
+&nbsp;&nbsp;• Govt forming 10,000 new FPOs across India<br>
+&nbsp;&nbsp;• Minimum 300 members (100 for hill areas)<br>
+<b>How to Join/Form:</b> Contact nearest ATMA office, NABARD or Krishi Vigyan Kendra`
+    }
+  ]
+};
+
+type Topic = 'all' | 'agriculture' | 'health' | 'weather' | 'government' | 'education' | 'livestock' | 'finance' | 'market';
+
+interface Message {
+  role: 'user' | 'bot';
+  text: string;
+  time: string;
+  chips?: string[];
+}
+
+interface WeatherData {
+  temp: number;
+  feels: number;
+  hum: number;
+  wind: number;
+  code: number;
+  lat: number;
+  lon: number;
+}
+
+const App: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [topic, setTopic] = useState<Topic>('all');
+  const [lang, setLang] = useState('en-IN');
+  const [isOnline, setIsOnline] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [showWeather, setShowWeather] = useState(false);
+  const [showEmergency, setShowEmergency] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [autoTTS, setAutoTTS] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [saverMode, setSaverMode] = useState(false);
+  const [msgCount, setMsgCount] = useState(0);
+  const [totalBytes, setTotalBytes] = useState(0);
+  const [sessionTime, setSessionTime] = useState('0:00');
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isFirstMessage, setIsFirstMessage] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  const chatRef = useRef<HTMLDivElement>(null);
+  const sessionStartRef = useRef(Date.now());
+  const recognitionRef = useRef<any>(null);
+
+  const getTime = () => {
+    return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+// Removed unused function
+
+  const stripTags = (html: string) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const getChips = (t: Topic): string[] => {
+    const c: Record<Topic, string[]> = {
+      all: ['Rice farming', 'Cow care', 'PM KISAN', 'MUDRA loan'],
+      agriculture: ['Soil health tips', 'Drip irrigation', 'Pest control', 'Organic farming'],
+      health: ['Snake bite first aid', 'Pregnancy care', 'Fever treatment', 'Child nutrition'],
+      weather: ['Flood preparation', 'Drought advisory', 'Weather apps'],
+      government: ['Ayushman Bharat', 'KCC loan', 'MGNREGA work', 'PM Awas Yojana'],
+      education: ['Student scholarships', 'Adult literacy', 'Skill training'],
+      livestock: ['Buffalo farming', 'Goat rearing', 'Poultry guide', 'Fish farming'],
+      finance: ['SHG benefits', 'MUDRA loan', 'UPI payments', 'Post office savings'],
+      market: ['MSP prices', 'FPO benefits', 'Crop storage tips']
+    };
+    return c[t] || c.all;
+  };
+
+  const speak = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text.substring(0, 300));
+      utt.lang = lang;
+      utt.rate = 0.9;
+      window.speechSynthesis.speak(utt);
+    }
+  }, [lang]);
+
+  const processQuery = useCallback((query: string) => {
+    const ql = query.toLowerCase();
+
+    // Greetings
+    if (/^(hi|hello|namaste|hey|namaskar|good morning|good evening|jai|pranam|vanakkam|salam)/i.test(ql)) {
+      return {
+        text: "🙏 <b>Namaste!</b> How can I help you today?<br>Choose a topic tab or type your question.",
+        chips: getChips(topic)
+      };
+    }
+
+    // Thanks
+    if (/thank|dhanyawad|shukriya|thanks/i.test(ql)) {
+      return {
+        text: "😊 You're welcome! I'm always here to help.<br>Feel free to ask anything else! 🌾"
+      };
+    }
+
+    // Help
+    if (/help|what can you|capabilities|features|kya kar sakte/i.test(ql)) {
+      return {
+        text: "🤖 <b>I can help you with:</b><br><br>" +
+          "🌱 <b>Agriculture</b> — Rice, Wheat, Maize, Cotton, Vegetables, Organic Farming<br>" +
+          "❤️ <b>Health</b> — Fever, Diarrhea, Pregnancy, Snake Bite, First Aid, Diabetes<br>" +
+          "🌦️ <b>Weather</b> — Monsoon, Drought, Heat Wave, Storm Safety<br>" +
+          "🏛️ <b>Government</b> — PM-KISAN, Ayushman, Ration, KCC, MGNREGA, PMAY<br>" +
+          "📚 <b>Education</b> — Scholarships, Literacy, Skill Training<br>" +
+          "🐄 <b>Livestock</b> — Cattle, Goat, Poultry, Fish Farming<br>" +
+          "💰 <b>Finance</b> — Savings, SHG, MUDRA Loan, Digital Payments<br>" +
+          "📊 <b>Market</b> — MSP Prices, FPO, Storage Tips",
+        chips: ['Rice farming tips', 'PM KISAN details', 'How to raise goats', 'MUDRA loan details']
+      };
+    }
+
+    // Emergency
+    if (/emergency|help me|accident|fire|police|ambulance|108|100|101/i.test(ql)) {
+      return {
+        text: "🆘 <b>EMERGENCY CONTACTS:</b><br><br>" +
+          "🚑 Ambulance: <b>108</b><br>" +
+          "👮 Police: <b>100</b><br>" +
+          "🚒 Fire: <b>101</b><br>" +
+          "🌊 NDRF Disaster: <b>1078</b><br>" +
+          "👩 Women Safety: <b>181</b><br>" +
+          "🌾 Kisan Helpline: <b>1800-180-1551</b><br>" +
+          "🏥 Health: <b>104</b><br><br>" +
+          "<b>Tap the 🆘 button at the top for quick dial!</b>"
+      };
+    }
+
+    // Weather (live attempt)
+    if (/current weather|aaj ka mausam|today weather|temperature today/i.test(ql)) {
+      loadWeather();
+      return {
+        text: "🌤️ I'm fetching the latest weather data for you...<br>" +
+          "You can also tap the <b>🌤️ button</b> in the header to see the weather widget!<br><br>" +
+          "For daily farm-specific forecasts, use <b>Meghdoot App</b> or SMS your pincode to <b>7738299899</b>"
+      };
+    }
+
+    // Search KB
+    const allEntries = topic === 'all'
+      ? Object.values(KB).flat()
+      : (KB[topic] || Object.values(KB).flat());
+
+    let best: any = null, score = 0;
+    for (const e of allEntries) {
+      let s = 0;
+      for (const k of e.kw) {
+        if (ql.includes(k)) s += k.split(' ').length;
+      }
+      if (s > score) {
+        score = s;
+        best = e;
+      }
+    }
+
+    if (best && score > 0) {
+      return {
+        text: best.a,
+        chips: getChips(topic)
+      };
+    } else {
+      // Fuzzy partial match
+      let partial: any = null, ps = 0;
+      for (const e of Object.values(KB).flat()) {
+        for (const k of e.kw) {
+          const words = k.split(' ');
+          for (const w of words) {
+            if (w.length > 3 && ql.includes(w)) {
+              if (1 > ps) {
+                ps = 1;
+                partial = e;
+              }
+            }
+          }
+        }
+      }
+      if (partial) {
+        return {
+          text: partial.a,
+          chips: getChips('all')
+        };
+      } else {
+        return {
+          text: "🤔 <b>I couldn't find that in my local knowledge base.</b><br><br>" +
+            "Try asking about:<br>" +
+            "• <i>Rice/Wheat/Maize farming</i><br>" +
+            "• <i>Fever, diarrhea, pregnancy treatment</i><br>" +
+            "• <i>PM-KISAN, Ayushman Bharat, MGNREGA</i><br>" +
+            "• <i>Goat/Poultry/Fish farming</i><br>" +
+            "• <i>MUDRA loan, SHG, savings tips</i><br>" +
+            "• <i>Monsoon/drought advisory</i><br><br>" +
+            "📡 <i>When online, I can search the internet for your query.</i>",
+          chips: ['Rice farming', 'Fever treatment', 'PM KISAN', 'Goat farming']
+        };
+      }
+    }
+  }, [topic]);
+
+  const sendMessage = useCallback((text?: string) => {
+    const messageText = text || input.trim();
+    if (!messageText) return;
+
+    setIsFirstMessage(false);
+    setInput('');
+
+    // User message
+    const userMsg: Message = {
+      role: 'user',
+      text: messageText,
+      time: getTime()
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    setMsgCount(prev => prev + 1);
+    setTotalBytes(prev => prev + messageText.length);
+    setProgress(30);
+
+    // Bot response
+    setTimeout(() => {
+      setIsTyping(true);
+      setProgress(70);
+
+      setTimeout(() => {
+        const response = processQuery(messageText);
+        const botMsg: Message = {
+          role: 'bot',
+          text: response.text,
+          time: getTime(),
+          chips: response.chips
+        };
+
+        setMessages(prev => [...prev, botMsg]);
+        setMsgCount(prev => prev + 1);
+        setTotalBytes(prev => prev + response.text.length);
+        setIsTyping(false);
+        setProgress(100);
+
+        if (autoTTS) {
+          speak(stripTags(response.text));
+        }
+
+        setTimeout(() => setProgress(0), 600);
+      }, saverMode ? 400 : 1000);
+    }, 700);
+  }, [input, processQuery, autoTTS, saverMode, speak]);
+
+  const loadWeather = useCallback(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const res = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}` +
+              `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,apparent_temperature,weather_code` +
+              `&timezone=auto`
+            );
+            const data = await res.json();
+            const c = data.current;
+            setWeather({
+              temp: Math.round(c.temperature_2m),
+              feels: Math.round(c.apparent_temperature),
+              hum: c.relative_humidity_2m,
+              wind: Math.round(c.wind_speed_10m),
+              code: c.weather_code,
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude
+            });
+          } catch (e) {
+            setWeather(null);
+          }
+        },
+        () => setWeather(null)
+      );
+    }
+  }, []);
+
+  const wmoToEmoji = (c: number) => {
+    if (c === 0) return '☀️';
+    if (c <= 2) return '⛅';
+    if (c === 3) return '☁️';
+    if (c <= 49) return '🌫️';
+    if (c <= 69) return '🌧️';
+    if (c <= 79) return '🌨️';
+    if (c <= 84) return '🌦️';
+    if (c <= 94) return '⛈️';
+    return '🌩️';
+  };
+
+  const wmoToDesc = (c: number) => {
+    if (c === 0) return 'Clear sky';
+    if (c <= 2) return 'Partly cloudy';
+    if (c === 3) return 'Overcast';
+    if (c <= 49) return 'Foggy / Mist';
+    if (c <= 69) return 'Rain showers';
+    if (c <= 79) return 'Snow';
+    if (c <= 84) return 'Rain showers';
+    return 'Thunderstorm';
+  };
+
+  const toggleMic = useCallback(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      if (!recognitionRef.current) {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = lang;
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(transcript);
+          setIsListening(false);
+          setTimeout(() => sendMessage(transcript), 500);
+        };
+
+        recognitionRef.current.onerror = () => setIsListening(false);
+        recognitionRef.current.onend = () => setIsListening(false);
+      }
+
+      if (isListening) {
+        recognitionRef.current.stop();
+      } else {
+        recognitionRef.current.start();
+        setIsListening(true);
+      }
+    } else {
+      alert('Speech recognition not supported in this browser.');
+    }
+  }, [isListening, lang, sendMessage]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  useEffect(() => {
+    // Online/offline check
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    setIsOnline(navigator.onLine);
+
+    // Session timer
+    const timer = setInterval(() => {
+      const s = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+      const m = Math.floor(s / 60);
+      const ss = s % 60;
+      setSessionTime(`${m}:${ss < 10 ? '0' : ''}${ss}`);
+    }, 1000);
+
+    // Welcome message
+    setTimeout(() => {
+      const welcomeMsg: Message = {
+        role: 'bot',
+        text: "👋 <b>Namaste! I am Gram Sahayak AI</b> 🌾<br><br>" +
+          "I am your offline-ready rural assistant. I can help you with:<br>" +
+          "🌱 Agriculture & Crops &nbsp;|&nbsp; ❤️ Health & First Aid<br>" +
+          "🌦️ Weather Advisory &nbsp;|&nbsp; 🏛️ Government Schemes<br>" +
+          "📚 Education &nbsp;|&nbsp; 🐄 Livestock &nbsp;|&nbsp; 💰 Finance &nbsp;|&nbsp; 📊 Market<br><br>" +
+          "<i>Type your question below or tap 🎙️ to speak!</i>",
+        time: getTime(),
+        chips: ['Rice farming tips', 'How to treat fever', 'PM KISAN details', 'Cow rearing guide']
+      };
+      setMessages([welcomeMsg]);
+    }, 500);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+
+  const topics: { key: Topic; label: string; icon: string }[] = [
+    { key: 'all', label: 'All', icon: '🌐' },
+    { key: 'agriculture', label: 'Agriculture', icon: '🌱' },
+    { key: 'health', label: 'Health', icon: '❤️' },
+    { key: 'weather', label: 'Weather', icon: '🌦️' },
+    { key: 'government', label: 'Gov Schemes', icon: '🏛️' },
+    { key: 'education', label: 'Education', icon: '📚' },
+    { key: 'livestock', label: 'Livestock', icon: '🐄' },
+    { key: 'finance', label: 'Finance', icon: '💰' },
+    { key: 'market', label: 'Market', icon: '📊' }
+  ];
+
+  const emergencyContacts = [
+    { num: '108', icon: '🚑', label: 'Ambulance' },
+    { num: '100', icon: '👮', label: 'Police' },
+    { num: '101', icon: '🚒', label: 'Fire Brigade' },
+    { num: '1078', icon: '🌊', label: 'NDRF Disaster' },
+    { num: '181', icon: '👩', label: 'Women Safety' },
+    { num: '1800-180-1551', icon: '🌾', label: 'Kisan Helpline' }
+  ];
+
+  return (
+    <div className={cn(
+      "min-h-screen flex flex-col transition-colors duration-300",
+      darkMode ? "bg-gray-900 text-gray-100" : "bg-green-50 text-gray-900"
+    )}>
+      {/* Progress Bar */}
+      <div 
+        className="fixed top-0 left-0 h-1 bg-green-600 transition-all duration-300 z-50"
+        style={{ width: `${progress}%` }}
+      />
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40"
+          onClick={() => setShowSettings(false)}
+        >
+          <div 
+            className={cn(
+              "w-full max-w-md rounded-2xl shadow-2xl p-6 max-h-[80vh] overflow-y-auto m-4",
+              darkMode ? "bg-gray-800" : "bg-white"
+            )}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-green-700">⚙️ Settings</h2>
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { label: '🌙 Dark Mode', desc: 'Switch to dark theme', value: darkMode, onChange: () => setDarkMode(!darkMode) },
+                { label: '🔊 Auto Read Aloud', desc: 'Bot reads every reply automatically', value: autoTTS, onChange: () => setAutoTTS(!autoTTS) },
+                { label: '📳 Sound Alerts', desc: 'Play sound on new message', value: soundOn, onChange: () => setSoundOn(!soundOn) },
+                { label: '🔋 Data Saver Mode', desc: 'Shorter replies to save bandwidth', value: saverMode, onChange: () => setSaverMode(!saverMode) }
+              ].map((item, i) => (
+                <div key={i} className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                  <div>
+                    <div className="font-semibold">{item.label}</div>
+                    <div className="text-sm text-gray-500">{item.desc}</div>
+                  </div>
+                  <button
+                    onClick={item.onChange}
+                    className={cn(
+                      "w-12 h-6 rounded-full relative transition-colors",
+                      item.value ? "bg-green-600" : "bg-gray-300"
+                    )}
+                  >
+                    <div className={cn(
+                      "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                      item.value ? "left-7" : "left-1"
+                    )} />
+                  </button>
+                </div>
+              ))}
+
+              <div className="flex justify-between items-center py-3">
+                <div>
+                  <div className="font-semibold">🌐 Language</div>
+                  <div className="text-sm text-gray-500">Voice input & output language</div>
+                </div>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  className={cn(
+                    "px-3 py-2 rounded-lg border-2",
+                    darkMode 
+                      ? "bg-gray-700 border-gray-600 text-white" 
+                      : "bg-white border-green-200 text-gray-900"
+                  )}
+                >
+                  {[
+                    { value: 'en-IN', label: '🇮🇳 English (India)' },
+                    { value: 'hi-IN', label: '🇮🇳 Hindi' },
+                    { value: 'ta-IN', label: '🇮🇳 Tamil' },
+                    { value: 'te-IN', label: '🇮🇳 Telugu' },
+                    { value: 'kn-IN', label: '🇮🇳 Kannada' },
+                    { value: 'mr-IN', label: '🇮🇳 Marathi' },
+                    { value: 'bn-IN', label: '🇮🇳 Bengali' },
+                    { value: 'sw-KE', label: '🇰🇪 Swahili' }
+                  ].map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info Modal */}
+      {showInfo && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40"
+          onClick={() => setShowInfo(false)}
+        >
+          <div 
+            className={cn(
+              "w-full max-w-md rounded-2xl shadow-2xl p-6 max-h-[80vh] overflow-y-auto m-4",
+              darkMode ? "bg-gray-800" : "bg-white"
+            )}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-green-700">ℹ️ About Gram Sahayak AI</h2>
+              <button 
+                onClick={() => setShowInfo(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+              <strong className="text-green-700">Gram Sahayak AI</strong> is a low-bandwidth, 
+              offline-first AI assistant designed for rural communities.<br/><br/>
+              ✅ Works without internet (local knowledge base)<br/>
+              🎙️ Voice input & text-to-speech output<br/>
+              🌐 Multilingual support (8 languages)<br/>
+              🌱 Agriculture, Health, Weather, Gov Schemes, Education<br/>
+              📲 Mobile-friendly & battery efficient<br/>
+              💾 No data stored on any server<br/><br/>
+              <strong className="text-green-700">Emergency Helplines:</strong><br/>
+              🚑 Medical: <strong>108</strong><br/>
+              🚒 Fire: <strong>101</strong><br/>
+              👮 Police: <strong>100</strong><br/>
+              🌊 Disaster: <strong>1078</strong> (NDRF)<br/>
+              👩‍⚕️ Women Helpline: <strong>181</strong><br/>
+              ☎️ Kisan Helpline: <strong>1800-180-1551</strong>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="bg-gradient-to-r from-green-700 to-green-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-2xl shadow-md">
+              🌾
+            </div>
+            <div>
+              <h1 className="text-lg font-bold">Gram Sahayak AI</h1>
+              <p className="text-xs text-green-100">Low-Bandwidth Rural Assistant</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1.5 rounded-full text-sm font-semibold">
+              <div className={cn(
+                "w-2 h-2 rounded-full animate-pulse",
+                isOnline ? "bg-green-300" : "bg-yellow-300"
+              )} />
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
+            </div>
+
+            {[
+              { icon: '🆘', action: () => setShowEmergency(!showEmergency), active: showEmergency, title: 'Emergency' },
+              { icon: '🌤️', action: () => { setShowWeather(!showWeather); if (!showWeather) loadWeather(); }, active: showWeather, title: 'Weather' },
+              { icon: 'ℹ️', action: () => setShowInfo(true), active: false, title: 'Info' },
+              { icon: '⚙️', action: () => setShowSettings(true), active: false, title: 'Settings' }
+            ].map((btn, i) => (
+              <button
+                key={i}
+                onClick={btn.action}
+                title={btn.title}
+                className={cn(
+                  "w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all",
+                  btn.active ? "bg-white text-green-700" : "bg-white bg-opacity-20 hover:bg-opacity-30"
+                )}
+              >
+                {btn.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Offline Banner */}
+        {!isOnline && (
+          <div className="mt-3 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium border-l-4 border-yellow-500">
+            ⚠️ You're offline — Using local knowledge base only. All core features still work!
+          </div>
+        )}
+      </header>
+
+      {/* Weather Widget */}
+      {showWeather && (
+        <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-4 mx-4 mt-4 rounded-2xl shadow-lg">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-sm opacity-90">
+                📍 {weather ? `Lat:${weather.lat.toFixed(2)} Lon:${weather.lon.toFixed(2)}` : 'Loading location...'}
+              </div>
+              <div className="text-5xl font-bold mt-1">
+                {weather ? `${weather.temp}°C` : '--°C'}
+              </div>
+              <div className="text-base mt-1">
+                {weather ? wmoToDesc(weather.code) : 'Fetching weather...'}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-5xl">
+                {weather ? wmoToEmoji(weather.code) : '🌤️'}
+              </div>
+              <div className="text-sm opacity-90 mt-1">
+                {new Date().toLocaleDateString('en-IN')}
+              </div>
+            </div>
+          </div>
+          {weather && (
+            <div className="flex gap-6 mt-4 text-sm opacity-90">
+              <div className="flex items-center gap-1">💧 Humidity: <strong>{weather.hum}%</strong></div>
+              <div className="flex items-center gap-1">💨 Wind: <strong>{weather.wind} km/h</strong></div>
+              <div className="flex items-center gap-1">🌡️ Feels: <strong>{weather.feels}°C</strong></div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Emergency Panel */}
+      {showEmergency && (
+        <div className={cn(
+          "mx-4 mt-4 p-4 rounded-2xl border-2",
+          darkMode 
+            ? "bg-red-900 border-red-700" 
+            : "bg-red-50 border-red-200"
+        )}>
+          <div className="text-red-700 font-bold text-lg mb-3">🆘 Emergency Helplines — Tap to Call</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {emergencyContacts.map((contact, i) => (
+              <button
+                key={i}
+                onClick={() => window.location.href = `tel:${contact.num}`}
+                className={cn(
+                  "p-3 rounded-xl text-center font-semibold transition-all hover:scale-105",
+                  darkMode 
+                    ? "bg-red-800 text-red-100" 
+                    : "bg-white text-red-700 border border-red-200 shadow-sm"
+                )}
+              >
+                <div className="text-2xl mb-1">{contact.icon}</div>
+                <div className="text-sm">{contact.label}</div>
+                <div className="text-lg font-bold">{contact.num}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Topic Tabs */}
+      <div className={cn(
+        "p-3 overflow-x-auto scrollbar-hide flex gap-2",
+        darkMode ? "bg-gray-800" : "bg-white shadow-sm"
+      )}>
+        {topics.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTopic(t.key as Topic)}
+            className={cn(
+              "whitespace-nowrap px-4 py-2 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5",
+              topic === t.key
+                ? "bg-green-600 text-white"
+                : darkMode
+                  ? "bg-gray-700 text-green-400 border border-green-800"
+                  : "bg-white text-green-700 border-2 border-green-200 hover:border-green-600"
+            )}
+          >
+            <span>{t.icon}</span>
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Stats Bar */}
+      <div className={cn(
+        "px-4 py-2 flex gap-4 text-xs flex-wrap",
+        darkMode ? "bg-gray-800 text-gray-400" : "bg-yellow-50 text-gray-600 border-b border-yellow-100"
+      )}>
+        <div>💬 <strong className={darkMode ? "text-green-400" : "text-green-700"}>{msgCount}</strong> msgs</div>
+        <div>📦 <strong className={darkMode ? "text-green-400" : "text-green-700"}>{formatBytes(totalBytes)}</strong> used</div>
+        <div>🔋 <strong className={darkMode ? "text-green-400" : "text-green-700"}>{saverMode ? 'Data Saver' : isOnline ? 'Normal' : 'Offline KB'}</strong></div>
+        <div>⏱️ <strong className={darkMode ? "text-green-400" : "text-green-700"}>{sessionTime}</strong></div>
+        {weather && (
+          <div>🌡️ <strong className={darkMode ? "text-green-400" : "text-green-700"}>{weather.temp}°C</strong></div>
+        )}
+      </div>
+
+      {/* Quick Action Cards (before first message) */}
+      {isFirstMessage && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4">
+          {[
+            { icon: '🌱', title: 'Crop Advice', sub: 'Season & soil tips', query: 'Best crop for this season' },
+            { icon: '❤️', title: 'Health Help', sub: 'Symptoms & first aid', query: 'How to treat fever at home' },
+            { icon: '🏛️', title: 'Gov Schemes', sub: 'Benefits & apply', query: 'PM KISAN scheme details' },
+            { icon: '🌦️', title: 'Weather Tips', sub: 'Seasonal advisory', query: 'Flood and monsoon advisory' },
+            { icon: '🐄', title: 'Livestock Care', sub: 'Animal health', query: 'How to take care of cows' },
+            { icon: '💰', title: 'Finance Tips', sub: 'Savings & loans', query: 'How to save money and get loan' }
+          ].map((qa, i) => (
+            <button
+              key={i}
+              onClick={() => sendMessage(qa.query)}
+              className={cn(
+                "p-4 rounded-xl text-center transition-all hover:scale-105",
+                darkMode 
+                  ? "bg-gray-800 border border-gray-700 hover:border-green-600" 
+                  : "bg-white border-2 border-gray-100 hover:border-green-600 shadow-sm"
+              )}
+            >
+              <div className="text-3xl mb-2">{qa.icon}</div>
+              <div className="font-bold text-sm">{qa.title}</div>
+              <div className="text-xs text-gray-500 mt-1">{qa.sub}</div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Chat Area */}
+      <div 
+        ref={chatRef}
+        className="flex-1 overflow-y-auto p-4 space-y-3"
+      >
+        {messages.map((msg, i) => (
+          <div 
+            key={i} 
+            className={cn(
+              "flex items-end gap-2 max-w-[88%] animate-fade-in",
+              msg.role === 'user' ? "flex-row-reverse ml-auto" : "mr-auto"
+            )}
+          >
+            <div className={cn(
+              "w-9 h-9 rounded-full flex items-center justify-center text-lg flex-shrink-0",
+              msg.role === 'user' 
+                ? "bg-green-500" 
+                : "bg-gradient-to-br from-green-500 to-green-600"
+            )}>
+              {msg.role === 'user' ? '👤' : '🌾'}
+            </div>
+
+            <div className={cn(
+              "rounded-2xl p-3 shadow-md max-w-full",
+              msg.role === 'user' 
+                ? cn(
+                    "rounded-br-md",
+                    darkMode ? "bg-green-900 text-white" : "bg-green-100 text-gray-900"
+                  )
+                : cn(
+                    "rounded-bl-md border-l-4 border-green-500",
+                    darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+                  )
+            )}>
+              <div 
+                className="text-sm leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+              />
+
+              {msg.chips && msg.chips.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {msg.chips.map((chip, j) => (
+                    <button
+                      key={j}
+                      onClick={() => sendMessage(chip)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105",
+                        darkMode 
+                          ? "bg-green-900 text-green-300 border border-green-700 hover:bg-green-700 hover:text-white" 
+                          : "bg-green-50 text-green-700 border border-green-200 hover:bg-green-600 hover:text-white"
+                      )}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between mt-2">
+                {msg.role === 'bot' && (
+                  <button
+                    onClick={() => speak(stripTags(msg.text))}
+                    className={cn(
+                      "text-xs px-2 py-1 rounded-lg font-medium transition-all",
+                      darkMode 
+                        ? "bg-gray-700 text-green-400 hover:bg-gray-600" 
+                        : "bg-gray-100 text-green-700 hover:bg-green-100"
+                    )}
+                  >
+                    🔊 Read Aloud
+                  </button>
+                )}
+                <div className="text-xs text-gray-500">
+                  {msg.time}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Typing Indicator */}
+        {isTyping && (
+          <div className="flex items-end gap-2 max-w-[88%] mr-auto">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-lg">
+              🌾
+            </div>
+            <div className={cn(
+              "rounded-2xl rounded-bl-md p-3 shadow-md",
+              darkMode ? "bg-gray-800" : "bg-white"
+            )}>
+              <div className="flex gap-1.5 items-center">
+                {[0, 1, 2].map(i => (
+                  <span 
+                    key={i}
+                    className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Bar */}
+      <div className={cn(
+        "p-3 flex items-center gap-2 shadow-lg",
+        darkMode ? "bg-gray-800 border-t border-gray-700" : "bg-white border-t border-gray-100"
+      )}>
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value)}
+          className={cn(
+            "px-2 py-2 rounded-lg text-sm font-medium",
+            darkMode 
+              ? "bg-gray-700 border border-gray-600 text-white" 
+              : "bg-green-50 border border-green-200 text-green-700"
+          )}
+        >
+          {[
+            { value: 'en-IN', label: '🇮🇳 EN' },
+            { value: 'hi-IN', label: '🇮🇳 HI' },
+            { value: 'ta-IN', label: '🇮🇳 TA' },
+            { value: 'te-IN', label: '🇮🇳 TE' },
+            { value: 'kn-IN', label: '🇮🇳 KN' },
+            { value: 'mr-IN', label: '🇮🇳 MR' },
+            { value: 'bn-IN', label: '🇮🇳 BN' },
+            { value: 'sw-KE', label: '🇰🇪 SW' }
+          ].map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask about farming, health, weather..."
+          className={cn(
+            "flex-1 px-4 py-3 rounded-full text-sm outline-none transition-all",
+            darkMode 
+              ? "bg-gray-700 border-2 border-gray-600 text-white placeholder-gray-400 focus:border-green-500" 
+              : "bg-gray-50 border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-green-500"
+          )}
+        />
+
+        <button
+          onClick={toggleMic}
+          className={cn(
+            "w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all",
+            isListening
+              ? "bg-red-100 text-red-600 animate-pulse"
+              : darkMode
+                ? "bg-gray-700 text-green-400 hover:bg-gray-600"
+                : "bg-green-50 text-green-700 hover:bg-green-100"
+          )}
+          title="Voice Input"
+        >
+          🎙️
+        </button>
+
+        <button
+          onClick={() => sendMessage()}
+          disabled={!input.trim()}
+          className={cn(
+            "w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all",
+            input.trim()
+              ? "bg-green-600 text-white hover:bg-green-700 active:scale-95"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          )}
+          title="Send"
+        >
+          ➤
+        </button>
+      </div>
+
+      {/* Custom Styles */}
+      <style>{
+        `
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `
+      }</style>
+    </div>
+  );
+};
+
+export default App;
