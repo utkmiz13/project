@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gram Sahayak AI</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-color: #f0fdf4; /* Green-50 */
+            --text-color: #111827; /* Gray-900 */
+            --header-bg: linear-gradient(to right, #15803d, #16a34a); /* Green-700 to 600 */
+            --header-text: #ffffff;
+            --card-bg: #ffffff;
+            --card-border: #e5e7eb;
+            --user-bubble: #dcfce7; /* Green-100 */
+            --user-text: #111827;
+            --bot-bubble: #ffffff;
+            --bot-text: #111827;
+            --bot-border: #15803d;
+            --input-bg: #f9fafb;
+            --input-border: #e5e7eb;
+            --accent: #15803d;
+            --accent-hover: #166534;
+            --chip-bg: #f0fdf4;
+            --chip-text: #15803d;
+            --chip-border: #bbf7d0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .dark-mode {
+            --bg-color: #111827; /* Gray-900 */
+            --text-color: #f3f4f6; /* Gray-100 */
+            --header-bg: linear-gradient(to right, #14532d, #166534); /* Darker greens */
+            --header-text: #ffffff;
+            --card-bg: #1f2937; /* Gray-800 */
+            --card-border: #374151;
+            --user-bubble: #14532d; /* Green-900 */
+            --user-text: #f3f4f6;
+            --bot-bubble: #1f2937;
+            --bot-text: #f3f4f6;
+            --bot-border: #22c55e;
+            --input-bg: #1f2937;
+            --input-border: #374151;
+            --accent: #22c55e;
+            --accent-hover: #16a34a;
+            --chip-bg: #14532d;
+            --chip-text: #86efac;
+            --chip-border: #166534;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- PROGRESS BAR --- */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background-color: #22c55e;
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            padding: 1rem;
+            animation: fadeIn 0.2s;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            color: var(--text-color);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+            color: #15803d;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .setting-label { font-weight: 600; }
+        .setting-desc { font-size: 0.85rem; color: #6b7280; }
+        .toggle-switch {
+            width: 3rem;
+            height: 1.5rem;
+            background-color: #d1d5db;
+            border-radius: 999px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-switch.active { background-color: #15803d; }
+        .toggle-knob {
+            width: 1.25rem;
+            height: 1.25rem;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 0.125rem;
+            left: 0.125rem;
+            transition: transform 0.3s;
+        }
+        .toggle-switch.active .toggle-knob { transform: translateX(1.5rem); }
+        select.lang-select {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .brand-icon {
+            width: 2.75rem;
+            height: 2.75rem;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #15803d;
+            font-weight: bold;
+        }
+        .brand-text h1 { font-size: 1.1rem; font-weight: 700; line-height: 1; }
+        .brand-text p { font-size: 0.7rem; opacity: 0.9; }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+        .status-dot.offline { background: #facc15; animation: none; }
+        
+        .icon-btn {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, background 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.95); }
+        .icon-btn.active { background: white; color: #15803d; }
+
+        /* --- OFFLINE BANNER --- */
+        #offline-banner {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-left: 4px solid #f59e0b;
+            display: none;
+        }
+
+        /* --- WIDGETS (Weather & Emergency) --- */
+        .widget-container {
+            padding: 0 1rem;
+            margin-top: 1rem;
+        }
+        .weather-card {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+        .weather-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .weather-temp { font-size: 2.5rem; font-weight: 800; line-height: 1; }
+        .weather-desc { font-size: 1.1rem; opacity: 0.9; }
+        .weather-details { display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.85rem; opacity: 0.9; }
+        
+        .emergency-card {
+            background-color: #fef2f2;
+            border: 2px solid #fecaca;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+        }
+        .dark-mode .emergency-card { background-color: #450a0a; border-color: #7f1d1d; }
+        .emergency-title { color: #b91c1c; font-weight: 800; margin-bottom: 0.75rem; font-size: 1.1rem; }
+        .emergency-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+        .emergency-btn {
+            background: white;
+            border: 1px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            color: #b91c1c;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .dark-mode .emergency-btn { background: #7f1d1d; color: #fecaca; border-color: #991b1b; }
+        .emergency-btn span { display: block; font-size: 1.2rem; margin-bottom: 0.2rem; }
+
+        /* --- TOPIC TABS --- */
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            overflow-x: auto;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            scrollbar-width: none; /* Firefox */
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tab {
+            white-space: nowrap;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .tab.active {
+            background-color: #15803d;
+            color: white;
+            border-color: #15803d;
+        }
+        .dark-mode .tab { background-color: #1f2937; border-color: #374151; color: #9ca3af; }
+        .dark-mode .tab.active { background-color: #15803d; color: white; border-color: #15803d; }
+
+        /* --- STATS BAR --- */
+        .stats-bar {
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            background-color: #fffbeb;
+            color: #78350f;
+            border-bottom: 1px solid #fde68a;
+            flex-wrap: wrap;
+        }
+        .dark-mode .stats-bar { background-color: #1f2937; color: #d1d5db; border-color: #374151; }
+        .stat-item strong { color: #15803d; }
+        .dark-mode .stat-item strong { color: #4ade80; }
+
+        /* --- QUICK ACTION CARDS --- */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+        @media (min-width: 768px) { .quick-actions { grid-template-columns: repeat(3, 1fr); } }
+        .qa-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .qa-card:active { transform: scale(0.98); }
+        .qa-card:hover { border-color: #15803d; }
+        .qa-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+        .qa-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+        .qa-sub { font-size: 0.75rem; color: #6b7280; }
+
+        /* --- CHAT AREA --- */
+        #chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            scroll-behavior: smooth;
+        }
+        
+        .message-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            max-width: 88%;
+            animation: slideUp 0.3s ease-out;
+        }
+        .message-row.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message-row.bot { align-self: flex-start; }
+
+        .avatar {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .user .avatar { background-color: #15803d; color: white; }
+        .bot .avatar { background: linear-gradient(to bottom right, #22c55e, #15803d); color: white; }
+
+        .bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+        .user .bubble {
+            background-color: var(--user-bubble);
+            color: var(--user-text);
+            border-bottom-right-radius: 0.25rem;
+        }
+        .bot .bubble {
+            background-color: var(--bot-bubble);
+            color: var(--bot-text);
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--bot-border);
+            border-bottom-left-radius: 0.25rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .bubble-content b { color: inherit; }
+        .bubble-content ul { padding-left: 1.2rem; margin: 0.5rem 0; }
+        .bubble-content li { margin-bottom: 0.25rem; }
+
+        .msg-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            gap: 0.5rem;
+        }
+        .read-aloud-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #15803d;
+            font-weight: 600;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+        .dark-mode .read-aloud-btn { color: #4ade80; }
+        .read-aloud-btn:hover { background-color: rgba(0,0,0,0.05); }
+
+        /* Chips */
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+        }
+        .chip {
+            background-color: var(--chip-bg);
+            color: var(--chip-text);
+            border: 1px solid var(--chip-border);
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip:hover { background-color: #15803d; color: white; border-color: #15803d; }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.75rem;
+            background-color: var(--bot-bubble);
+            border-radius: 1rem;
+            width: fit-content;
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--bot-border);
+        }
+        .typing-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            background-color: #15803d;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        /* --- INPUT AREA --- */
+        .input-container {
+            padding: 0.75rem;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+        }
+        .lang-select-input {
+            padding: 0.6rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--card-border);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 0.75rem;
+            outline: none;
+        }
+        .text-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 999px;
+            border: 2px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .text-input:focus { border-color: var(--accent); }
+        
+        .action-btn {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .action-btn:active { transform: scale(0.95); }
+        
+        .mic-btn {
+            background-color: var(--bg-color);
+            color: var(--accent);
+            border: 1px solid var(--card-border);
+        }
+        .mic-btn.listening {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border-color: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .send-btn {
+            background-color: var(--accent);
+            color: white;
+        }
+        .send-btn:disabled {
+            background-color: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .send-btn:not(:disabled):hover { background-color: var(--accent-hover); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Progress Bar -->
+    <div id="progress-bar"></div>
+
+    <!-- Modals -->
+    <div id="settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>⚙️ Settings</span>
+                <button class="close-btn" onclick="toggleModal('settings-modal')">×</button>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">🌙 Dark Mode</div>
+                    <div class="setting-desc">Switch to dark theme</div>
+                </div>
+                <div class="toggle-switch" id="toggle-dark" onclick="toggleSetting('darkMode')">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">🔊 Auto Read Aloud</div>
+                    <div class="setting-desc">Bot reads every reply automatically</div>
+                </div>
+                <div class="toggle-switch" id="toggle-tts" onclick="toggleSetting('autoTTS')">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">📳 Sound Alerts</div>
+                    <div class="setting-desc">Play sound on new message</div>
+                </div>
+                <div class="toggle-switch active" id="toggle-sound" onclick="toggleSetting('soundOn')">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">🔋 Data Saver Mode</div>
+                    <div class="setting-desc">Shorter replies to save bandwidth</div>
+                </div>
+                <div class="toggle-switch" id="toggle-saver" onclick="toggleSetting('saverMode')">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="setting-row" style="border-bottom: none;">
+                <div>
+                    <div class="setting-label">🌐 Language</div>
+                    <div class="setting-desc">Voice input & output language</div>
+                </div>
+                <select id="modal-lang-select" class="lang-select" onchange="updateLang(this.value)">
+                    <option value="en-IN">🇮🇳 English (India)</option>
+                    <option value="hi-IN">🇮🇳 Hindi</option>
+                    <option value="ta-IN">🇮🇳 Tamil</option>
+                    <option value="te-IN">🇮🇳 Telugu</option>
+                    <option value="kn-IN">🇮🇳 Kannada</option>
+                    <option value="mr-IN">🇮🇳 Marathi</option>
+                    <option value="bn-IN">🇮🇳 Bengali</option>
+                    <option value="sw-KE">🇰🇪 Swahili</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="info-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>ℹ️ About Gram Sahayak AI</span>
+                <button class="close-btn" onclick="toggleModal('info-modal')">×</button>
+            </div>
+            <div style="font-size: 0.9rem; line-height: 1.6; color: #4b5563;">
+                <strong style="color: #15803d;">Gram Sahayak AI</strong> is a low-bandwidth, 
+                offline-first AI assistant designed for rural communities.<br><br>
+                ✅ Works without internet (local knowledge base)<br>
+                🎙️ Voice input & text-to-speech output<br>
+                🌐 Multilingual support<br>
+                🌱 Agriculture, Health, Weather, Gov Schemes<br>
+                💾 No data stored on any server<br><br>
+                <strong style="color: #15803d;">Emergency Helplines:</strong><br>
+                🚑 Medical: <strong>108</strong><br>
+                🚒 Fire: <strong>101</strong><br>
+                👮 Police: <strong>100</strong><br>
+                🌊 Disaster: <strong>1078</strong><br>
+                ☎️ Kisan Helpline: <strong>1800-180-1551</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🌾</div>
+            <div class="brand-text">
+                <h1>Gram Sahayak AI</h1>
+                <p>Low-Bandwidth Rural Assistant</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="status-badge">
+                <div id="status-dot" class="status-dot"></div>
+                <span id="status-text">Online</span>
+            </div>
+            <button class="icon-btn" onclick="showEmergency()" title="Emergency">🆘</button>
+            <button class="icon-btn" onclick="showWeather()" title="Weather">🌤️</button>
+            <button class="icon-btn" onclick="toggleModal('info-modal')" title="Info">ℹ️</button>
+            <button class="icon-btn" onclick="toggleModal('settings-modal')" title="Settings">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Offline Banner -->
+    <div id="offline-banner">⚠️ You're offline — Using local knowledge base only.</div>
+
+    <!-- Weather Widget Container -->
+    <div id="weather-container" class="widget-container" style="display: none;"></div>
+
+    <!-- Emergency Widget Container -->
+    <div id="emergency-container" class="widget-container" style="display: none;"></div>
+
+    <!-- Topic Tabs -->
+    <div class="tabs-container" id="tabs-container">
+        <!-- Tabs injected by JS -->
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-item">💬 <strong id="stat-msgs">0</strong> msgs</div>
+        <div class="stat-item">📦 <strong id="stat-bytes">0 B</strong> used</div>
+        <div class="stat-item">🔋 <strong id="stat-mode">Normal</strong></div>
+        <div class="stat-item">⏱️ <strong id="stat-time">0:00</strong></div>
+        <div class="stat-item" id="stat-temp-container" style="display:none;">🌡️ <strong id="stat-temp">--°C</strong></div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div id="quick-actions" class="quick-actions">
+        <!-- Injected by JS -->
+    </div>
+
+    <!-- Chat Area -->
+    <div id="chat-area">
+        <!-- Messages injected here -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-container">
+        <select id="input-lang-select" class="lang-select-input" onchange="updateLang(this.value)">
+            <option value="en-IN">EN</option>
+            <option value="hi-IN">HI</option>
+            <option value="ta-IN">TA</option>
+            <option value="te-IN">TE</option>
+            <option value="kn-IN">KN</option>
+            <option value="mr-IN">MR</option>
+            <option value="bn-IN">BN</option>
+            <option value="sw-KE">SW</option>
+        </select>
+        <input type="text" id="text-input" class="text-input" placeholder="Ask about farming, health..." autocomplete="off">
+        <button id="mic-btn" class="action-btn mic-btn" onclick="toggleMic()">🎙️</button>
+        <button id="send-btn" class="action-btn send-btn" onclick="sendMessage()" disabled>➤</button>
+    </div>
+
+    <script>
+        /* --- JAVASCRIPT LOGIC --- */
+
+        // --- 1. KNOWLEDGE BASE ---
+        const KB = {
+            agriculture: [
+                {
+                    kw: ["rice", "paddy", "dhaan", "sowing rice", "transplant"],
+                    a: `🌾 <b>Rice / Paddy Farming — Complete Guide</b><br><br>
+<b>Varieties:</b> IR-64, Swarna, MTU-1010, BPT-5204 (Sona Masoori), PR-106, HUR-36<br>
+<b>Sowing Season:</b> Kharif (June–July) | Rabi (Nov–Dec in some regions)<br>
+<b>Nursery:</b> Sow in nursery bed → transplant 25–30 day old seedlings<br>
+<b>Spacing:</b> 20×15 cm for higher yield | Direct seeding also works<br>
+<b>Water:</b> Keep 5 cm water up to panicle initiation; drain before harvest<br>
+<b>Fertilizer (per acre):</b> Urea 50 kg + DAP 25 kg + MOP 17 kg<br>&nbsp;&nbsp;Split Urea: Basal(¼) + Tillering(¼) + Panicle(½)<br>
+<b>Diseases:</b> Blast (spray Tricyclazole 6g/10L) | BLB (spray Copper Oxychloride)<br>
+<b>Pests:</b> Stem Borer (Chlorpyrifos 2ml/L) | Brown Planthopper (Imidacloprid)<br>
+<b>Yield:</b> 20–30 qt/acre (improved varieties up to 40 qt/acre)<br>
+<b>Post-harvest:</b> Dry to 14% moisture before storage`
+                },
+                {
+                    kw: ["wheat", "gehu", "rabi", "winter crop", "wheat farming"],
+                    a: `🌾 <b>Wheat Farming — Complete Guide</b><br><br>
+<b>Varieties:</b> HD-2967, HD-3086, PBW-343, DBW-187, Raj-4120<br>
+<b>Sowing Time:</b> Oct 25–Nov 25 (timely) | Dec (late sowing, use K-9107)<br>
+<b>Seed Rate:</b> 40–45 kg/acre for timely sowing<br>
+<b>Soil:</b> Well-drained loam or clay loam; pH 6.0–7.5<br>
+<b>Fertilizer:</b> 50 kg Urea + 25 kg DAP + 17 kg MOP per acre<br>&nbsp;&nbsp;Apply Urea in 3 splits: at sowing, 21 days, 42 days<br>
+<b>Irrigation:</b> 6 critical stages — CRI (21d), Tillering, Jointing, Flowering, Dough, Maturity<br>
+<b>Diseases:</b> Yellow Rust (Propiconazole 1ml/L) | Loose Smut (seed treatment with Vitavax)<br>
+<b>Harvest:</b> When grain moisture drops to 12–14%; use combine for large area<br>
+<b>Yield:</b> 18–22 qt/acre (improved varieties up to 28 qt/acre)`
+                },
+                {
+                    kw: ["soil", "fertilizer", "nutrient", "compost", "soil health", "ph", "organic matter"],
+                    a: `🌱 <b>Soil Health & Fertilizer Guide</b><br><br>
+<b>Soil Testing:</b> Test every 2–3 years at KVK or Soil Health Card centre<br>
+<b>Ideal pH:</b> 6.0–7.5 for most crops<br>&nbsp;&nbsp;If pH < 6: Add lime (Calcium carbonate) 100–200 kg/acre<br>&nbsp;&nbsp;If pH > 8: Add Gypsum or Sulphur 20 kg/acre<br>
+<b>NPK for General Crops:</b> Nitrogen:Phosphorus:Potassium = 4:2:1 ratio<br>
+<b>Organic Inputs:</b><br>
+&nbsp;&nbsp;• FYM (Farm Yard Manure): 2–4 tonnes/acre every season<br>
+&nbsp;&nbsp;• Vermicompost: 400–600 kg/acre — best for vegetables<br>
+&nbsp;&nbsp;• Green Manure (Dhaincha): Fixes 80–100 kg N/ha<br>
+<b>Micronutrients:</b> Zinc (ZnSO4 10 kg/acre), Boron, Iron for deficiency symptoms<br>
+<b>Signs of Deficiency:</b><br>
+&nbsp;&nbsp;• N deficiency: Yellow lower leaves<br>
+&nbsp;&nbsp;• P deficiency: Purple/reddish stems<br>
+&nbsp;&nbsp;• K deficiency: Scorched leaf edges`
+                },
+                {
+                    kw: ["organic farming", "jaivik", "natural farming", "zero budget", "ZBNF"],
+                    a: `🌿 <b>Organic / Natural Farming Guide</b><br><br>
+<b>Zero Budget Natural Farming (ZBNF):</b><br>
+&nbsp;&nbsp;• Jeevamrit: 10 kg cow dung + 10L cow urine + 2 kg jaggery + 2 kg flour + 50L water<br>&nbsp;&nbsp;Apply 200L/acre every 15 days<br>
+&nbsp;&nbsp;• Bijamrit: Seed treatment with cow dung + lime + water<br>
+&nbsp;&nbsp;• Mulching with crop residue or dry leaves<br>
+<b>Organic Certification:</b><br>
+&nbsp;&nbsp;• PGS-India (Participatory Guarantee System) — free, village level<br>
+&nbsp;&nbsp;• Third-party certification for export markets<br>
+<b>Benefits:</b> Reduced input cost, healthy soil, premium price for organic produce<br>
+<b>Market:</b> Sell at organic mandis or through FPOs for 20–30% premium`
+                },
+                {
+                    kw: ["vegetable", "tomato", "onion", "potato", "capsicum", "brinjal", "vegetable farming"],
+                    a: `🥦 <b>Vegetable Farming — Key Tips</b><br><br>
+<b>Tomato:</b><br>
+&nbsp;&nbsp;• Season: Sep–Oct (Rabi) / Jan–Feb (Summer)<br>
+&nbsp;&nbsp;• Spacing: 75×45 cm | Transplant 25–30 day old seedlings<br>
+&nbsp;&nbsp;• Common disease: Early Blight — spray Mancozeb 2g/L<br>
+<b>Onion:</b><br>
+&nbsp;&nbsp;• Rabi onion: Oct–Nov nursery | Transplant Dec<br>
+&nbsp;&nbsp;• Kharif onion: June nursery | Transplant Aug<br>
+&nbsp;&nbsp;• Apply Urea at 30 and 60 DAS<br>
+<b>General Tips:</b><br>
+&nbsp;&nbsp;• Use drip + mulch for vegetables<br>
+&nbsp;&nbsp;• Apply micronutrients for quality produce<br>
+&nbsp;&nbsp;• Harvest in cool morning hours for better shelf life`
+                }
+            ],
+            health: [
+                {
+                    kw: ["fever", "temperature", "high fever", "malaria", "dengue", "flu"],
+                    a: `🌡️ <b>Fever — Diagnosis & Treatment</b><br><br>
+<b>Common Causes:</b> Malaria, Dengue, Typhoid, Viral flu, UTI<br>
+<b>Immediate Steps:</b><br>
+&nbsp;&nbsp;• Drink ORS / coconut water / plain water every hour<br>
+&nbsp;&nbsp;• Sponge forehead with lukewarm water cloth<br>
+&nbsp;&nbsp;• Take Paracetamol 500mg (adults) every 6 hours if >100°F<br>
+&nbsp;&nbsp;• Rest completely; avoid heavy work<br>
+<b>⚠️ Go to Doctor IMMEDIATELY if:</b><br>
+&nbsp;&nbsp;• Fever > 103°F (39.5°C)<br>
+&nbsp;&nbsp;• Lasts more than 3 days<br>
+&nbsp;&nbsp;• With rash, severe headache, vomiting, fits<br>
+&nbsp;&nbsp;• Child below 5 years has any fever<br>
+<b>Malaria Signs:</b> Shivering, sweating cycles, chills every 2–3 days → Get blood test<br>
+<b>Dengue Signs:</b> Severe body/eye pain, rash on body, platelet drop → Urgent hospital care<br>
+<b>Helpline:</b> 104 (Health Helpline, free)`
+                },
+                {
+                    kw: ["diarrhea", "loose motion", "stomach", "vomit", "cholera", "dehydration"],
+                    a: `💊 <b>Diarrhea & Dehydration — Complete Guide</b><br><br>
+<b>Most Important — ORS:</b><br>
+&nbsp;&nbsp;• Commercial ORS packet (Electral/Jeevan Jal) in 1 litre clean water<br>
+&nbsp;&nbsp;• Home ORS: 1L water + 6 tsp sugar + ½ tsp salt — stir well<br>
+&nbsp;&nbsp;• Give 200ml after every loose stool<br>
+<b>What to Eat:</b> Plain rice, khichdi, banana, curd rice, toast<br>
+<b>Avoid:</b> Oily food, spicy food, milk, raw vegetables, street food<br>
+<b>Children Under 5:</b><br>
+&nbsp;&nbsp;• Continue breastfeeding during diarrhea<br>
+&nbsp;&nbsp;• Zinc tablets (20mg/day for 14 days) reduces severity<br>
+&nbsp;&nbsp;• If child becomes very weak, sunken eyes → Emergency<br>
+<b>Signs of Severe Dehydration:</b><br>
+&nbsp;&nbsp;• No urine for 6+ hours | Sunken eyes | Dry mouth | Weakness<br>
+&nbsp;&nbsp;→ Rush to hospital for IV fluid immediately<br>
+<b>Prevention:</b><br>
+&nbsp;&nbsp;• Wash hands with soap before eating and after toilet<br>
+&nbsp;&nbsp;• Boil drinking water or use Aquatabs (chlorine tablets)`
+                },
+                {
+                    kw: ["snakebite", "snake bite", "snake", "viper", "cobra", "krait"],
+                    a: `🐍 <b>Snakebite — EMERGENCY First Aid</b><br><br>
+<b>WHAT TO DO:</b><br>
+&nbsp;&nbsp;✅ Keep the person CALM — panic increases venom spread<br>
+&nbsp;&nbsp;✅ Immobilize the bitten limb with a splint/stick<br>
+&nbsp;&nbsp;✅ Keep bitten limb BELOW heart level<br>
+&nbsp;&nbsp;✅ Remove rings, watches, tight clothing near bite<br>
+&nbsp;&nbsp;✅ Mark the time of bite with pen on skin<br>
+&nbsp;&nbsp;✅ Rush to NEAREST HOSPITAL IMMEDIATELY<br>
+&nbsp;&nbsp;✅ Call 108 ambulance<br><br>
+<b>⛔ WHAT NOT TO DO (causes more harm):</b><br>
+&nbsp;&nbsp;❌ Do NOT cut the wound or suck the venom<br>
+&nbsp;&nbsp;❌ Do NOT tie a tourniquet or tight bandage<br>
+&nbsp;&nbsp;❌ Do NOT apply herbs, mud, or fire on wound<br>
+&nbsp;&nbsp;❌ Do NOT give food, water, or alcohol<br>
+<b>Anti-Snake Venom (ASV):</b><br>
+&nbsp;&nbsp;• Available FREE at all government hospitals<br>
+&nbsp;&nbsp;• Must be given within 4–6 hours for best effect`
+                },
+                {
+                    kw: ["first aid", "wound", "cut", "bleeding", "burn", "fracture", "accident", "injury"],
+                    a: `🩹 <b>First Aid Guide — Common Emergencies</b><br><br>
+<b>Deep Cuts & Bleeding:</b><br>
+&nbsp;&nbsp;• Apply firm pressure with clean cloth for 10 minutes<br>
+&nbsp;&nbsp;• Raise injured part above heart level<br>
+&nbsp;&nbsp;• Clean wound with clean water (not spirit initially)<br>
+&nbsp;&nbsp;• Apply antiseptic cream; bandage properly<br>
+&nbsp;&nbsp;• If deep/gaping wound — needs stitching at hospital<br>
+<b>Burns:</b><br>
+&nbsp;&nbsp;• Run COOL (not ice cold) water for 10–20 minutes<br>
+&nbsp;&nbsp;• Remove jewellery/clothes from burn area (if not stuck)<br>
+&nbsp;&nbsp;• Cover with clean cloth; do NOT apply oil, toothpaste, or butter<br>
+&nbsp;&nbsp;• Burns > size of palm or on face/hands → Hospital immediately<br>
+<b>Fractures / Broken Bone:</b><br>
+&nbsp;&nbsp;• Do NOT try to straighten the bone<br>
+&nbsp;&nbsp;• Immobilize with stick/splint on both sides<br>
+&nbsp;&nbsp;• Support with cloth/bandage; handle gently<br>
+<b>CPR (Basic):</b> 30 chest compressions (hard & fast) + 2 rescue breaths; repeat`
+                },
+                {
+                    kw: ["pregnancy", "pregnant", "delivery", "maternal", "antenatal", "baby birth", "garbh"],
+                    a: `🤱 <b>Pregnancy & Maternal Health — Full Guide</b><br><br>
+<b>Register Early:</b> Visit PHC/Sub-Centre within 12 weeks of pregnancy<br>
+<b>4 ANC Checkups Schedule:</b><br>
+&nbsp;&nbsp;• 1st: Before 12 weeks (confirm pregnancy, blood test)<br>
+&nbsp;&nbsp;• 2nd: 14–26 weeks (ultrasound, BP check)<br>
+&nbsp;&nbsp;• 3rd: 28–34 weeks (position of baby)<br>
+&nbsp;&nbsp;• 4th: 36 weeks onwards (delivery planning)<br>
+<b>Daily Supplements (Free at PHC):</b><br>
+&nbsp;&nbsp;• Iron & Folic Acid (IFA) tablets — start from 12 weeks<br>
+&nbsp;&nbsp;• Calcium tablets — from 2nd trimester<br>
+<b>Danger Signs → Rush to Hospital:</b><br>
+&nbsp;&nbsp;• Heavy bleeding | Fits/seizures | Severe headache<br>
+&nbsp;&nbsp;• Baby not moving for 12 hours | High BP<br>
+<b>Government Benefits:</b><br>
+&nbsp;&nbsp;• Janani Suraksha Yojana (JSY): ₹1400 cash for institutional delivery<br>
+&nbsp;&nbsp;• PMSMA: Free checkup on 9th of every month at govt hospitals<br>
+<b>Helpline:</b> PHC/CHC or 108`
+                }
+            ],
+            weather: [
+                {
+                    kw: ["rain", "monsoon", "rainfall", "flood", "water logging"],
+                    a: `🌧️ <b>Monsoon & Flood Preparedness</b><br><br>
+<b>Before Monsoon:</b><br>
+&nbsp;&nbsp;• Clean drainage channels around your field and home<br>
+&nbsp;&nbsp;• Store 15 days food, clean water (10L/person), medicines<br>
+&nbsp;&nbsp;• Repair roof, walls, and cattle shed<br>
+&nbsp;&nbsp;• Note nearest high ground / relief camp location<br>
+<b>During Heavy Rain / Flood:</b><br>
+&nbsp;&nbsp;• Move to higher ground immediately if water enters home<br>
+&nbsp;&nbsp;• Do NOT cross flooded roads, rivers, or streams<br>
+&nbsp;&nbsp;• Keep children and elderly away from water<br>
+&nbsp;&nbsp;• Turn off gas cylinders and electrical mains<br>
+<b>After Flood:</b><br>
+&nbsp;&nbsp;• Do not eat food that has been in floodwater<br>
+&nbsp;&nbsp;• Bleach home surfaces to prevent disease<br>
+&nbsp;&nbsp;• Watch for snakes that may enter homes after flooding<br>
+<b>For Farmers:</b><br>
+&nbsp;&nbsp;• File crop loss claim within 72 hours of damage<br>
+&nbsp;&nbsp;• PMFBY insurance claim: Contact insurance company or banker<br>
+<b>Emergency: NDRF Helpline 1078 | Ambulance 108`
+                },
+                {
+                    kw: ["drought", "dry", "water shortage", "heat wave", "garmi", "heatstroke"],
+                    a: `☀️ <b>Drought & Heat Wave Survival Guide</b><br><br>
+<b>Personal Safety in Heat Wave:</b><br>
+&nbsp;&nbsp;• Drink 3–4 litres of water/day; add ORS if sweating heavily<br>
+&nbsp;&nbsp;• Avoid going out between 12 PM – 4 PM<br>
+&nbsp;&nbsp;• Wear light-coloured, loose cotton clothes<br>
+&nbsp;&nbsp;• Eat light meals; avoid heavy, oily food<br>
+<b>Heatstroke Signs (Emergency!):</b><br>
+&nbsp;&nbsp;• Body temp > 40°C, confusion, not sweating, unconscious<br>
+&nbsp;&nbsp;• ACTION: Move to shade, cool with wet cloth, rush to hospital<br>
+<b>Drought-Resistant Crops:</b><br>
+&nbsp;&nbsp;• Bajra, Jowar, Moth Bean, Cowpea, Cluster Bean<br>
+&nbsp;&nbsp;• Castor, Sesame, Groundnut (short-duration varieties)<br>
+<b>Water Conservation:</b><br>
+&nbsp;&nbsp;• Mulching reduces soil moisture loss by 30–40%<br>
+&nbsp;&nbsp;• Farm ponds for rainwater storage<br>
+&nbsp;&nbsp;• Switch to drip irrigation (50% water saving)<br>
+<b>Govt Relief:</b> Report crop loss to Patwari/Tehsildar for drought relief compensation`
+                },
+                {
+                    kw: ["weather", "forecast", "temperature", "season", "climate", "barish kab"],
+                    a: `🌤️ <b>Weather Advisory for Farmers</b><br><br>
+<b>Free Weather Apps/Services:</b><br>
+&nbsp;&nbsp;• <b>Meghdoot App</b> — village-level 5-day forecast for farmers (offline capable)<br>
+&nbsp;&nbsp;• <b>Kisan Suvidha App</b> — weather + crop advisory + market prices<br>
+&nbsp;&nbsp;• <b>Damini App</b> — lightning alerts (very useful!)<br>
+&nbsp;&nbsp;• SMS service: Send your pin code to 7738299899 (IMD)<br>
+<b>Seasonal Calendar:</b><br>
+&nbsp;&nbsp;• Kharif sowing: June 15–July 15 (after 1st good monsoon rain)<br>
+&nbsp;&nbsp;• Rabi sowing: Oct 15–Nov 30<br>
+&nbsp;&nbsp;• Zaid season: Feb–May (short-duration crops)<br>
+<b>Farming Weather Rules:</b><br>
+&nbsp;&nbsp;• Don't spray pesticides if rain expected in 24 hours<br>
+&nbsp;&nbsp;• Plant on cloudy days to reduce transplant shock<br>
+&nbsp;&nbsp;• Harvest before predicted rain to avoid crop damage<br>
+<b>IMD Helpline:</b> 1800-180-1717 (free weather inquiry)`
+                }
+            ],
+            government: [
+                {
+                    kw: ["pm kisan", "pmkisan", "kisan samman", "6000", "farmer payment", "installment"],
+                    a: `🏛️ <b>PM-KISAN Samman Nidhi — Complete Guide</b><br><br>
+<b>Benefit:</b> ₹6,000/year in 3 installments of ₹2,000 each<br>
+<b>Who can apply:</b> All small & marginal farmers with cultivable land<br>
+<b>Not Eligible:</b> Government employees, taxpayers, professionals (doctors, lawyers)<br>
+<b>Documents Needed:</b><br>
+&nbsp;&nbsp;• Aadhaar card (mandatory)<br>
+&nbsp;&nbsp;• Bank account linked to Aadhaar<br>
+&nbsp;&nbsp;• Land records (Khasra/Khatauni)<br>
+&nbsp;&nbsp;• Mobile number<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;1. Visit pmkisan.gov.in → New Farmer Registration<br>
+&nbsp;&nbsp;2. OR go to nearest CSC (Common Service Centre)<br>
+&nbsp;&nbsp;3. OR contact Patwari / Agriculture Officer<br>
+<b>Check Payment Status:</b><br>
+&nbsp;&nbsp;• pmkisan.gov.in → Beneficiary Status<br>
+&nbsp;&nbsp;• SMS: PM-KISAN REG to 155261<br>
+<b>Helpline:</b> 155261 | 011-24300606 (Mon–Fri, 9am–6pm)<br>
+<b>eKYC:</b> Must do eKYC at CSC or pmkisan.gov.in to continue getting payments`
+                },
+                {
+                    kw: ["ayushman", "pmjay", "health card", "golden card", "free hospital", "5 lakh", "free treatment"],
+                    a: `🏥 <b>Ayushman Bharat PMJAY — Health Insurance</b><br><br>
+<b>Benefit:</b> FREE health cover up to ₹5 lakh per family per year<br>
+<b>Covers:</b> Hospitalization, surgery, ICU, medicines, diagnostics (1500+ procedures)<br>
+<b>Who is Eligible:</b> SECC-2011 listed families + State-added beneficiaries<br>
+<b>Check Eligibility:</b><br>
+&nbsp;&nbsp;• Visit mera.pmjay.gov.in<br>
+&nbsp;&nbsp;• Call 14555 (free helpline)<br>
+&nbsp;&nbsp;• Visit nearest Ayushman Mitra at empanelled hospital<br>
+<b>Get Ayushman Card:</b><br>
+&nbsp;&nbsp;• Visit nearest CSC or empanelled hospital<br>
+&nbsp;&nbsp;• Need: Aadhaar + Mobile number<br>
+&nbsp;&nbsp;• Card is FREE to make<br>
+<b>How to Avail Treatment:</b><br>
+&nbsp;&nbsp;1. Show Ayushman card at empanelled hospital<br>
+&nbsp;&nbsp;2. Cashless treatment — NO advance payment needed<br>
+&nbsp;&nbsp;3. Works at 25,000+ hospitals across India<br>
+<b>Ab Har Ghar Ayushman:</b> Now covers all citizens above 70 years<br>
+<b>Helpline:</b> 14555 | 1800-111-565 (24x7 free)`
+                },
+                {
+                    kw: ["kcc", "kisan credit card", "farmer loan", "crop loan", "bank loan", "interest subsidy"],
+                    a: `🏦 <b>Kisan Credit Card (KCC) — Farmer Loan</b><br><br>
+<b>Benefit:</b> Revolving credit for farming at only <b>4% effective interest</b> (with 3% subvention)<br>
+<b>Credit Limit:</b> Based on landholding + crop scale of finance<br>&nbsp;&nbsp;(Typically ₹1.6 lakh for 1 acre rice/wheat)<br>
+<b>Who can apply:</b> All farmers, tenant farmers, sharecroppers, SHG members<br>
+<b>Documents:</b><br>
+&nbsp;&nbsp;• Aadhaar + PAN card<br>
+&nbsp;&nbsp;• Land records (Khasra / Khatauni)<br>
+&nbsp;&nbsp;• Passport photo<br>
+&nbsp;&nbsp;• Bank account<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit nearest nationalized bank branch (SBI, PNB, Canara, etc.)<br>
+&nbsp;&nbsp;• OR apply online on bank's website / PM-KISAN portal<br>
+<b>Validity:</b> 5 years with annual renewal<br>
+<b>Additional Benefits:</b><br>
+&nbsp;&nbsp;• Automatic crop insurance under PMFBY<br>
+&nbsp;&nbsp;• Personal accident cover ₹50,000<br>
+<b>Kisan Helpline:</b> 1800-180-1551 (free)`
+                },
+                {
+                    kw: ["pmfby", "crop insurance", "fasal bima", "crop loss claim"],
+                    a: `🌾 <b>PM Fasal Bima Yojana (PMFBY) — Crop Insurance</b><br><br>
+<b>What it covers:</b> Crop loss due to drought, flood, pest, disease, hailstorm<br>
+<b>Premium (Very Low):</b><br>
+&nbsp;&nbsp;• Kharif crops: 2% of Sum Insured<br>
+&nbsp;&nbsp;• Rabi crops: 1.5% of Sum Insured<br>
+&nbsp;&nbsp;• Horticulture: 5% of Sum Insured<br>
+<b>How to Enroll:</b><br>
+&nbsp;&nbsp;• KCC farmers: Auto-enrolled (may opt-out if desired)<br>
+&nbsp;&nbsp;• Non-KCC: Apply at bank, CSC, or pmfby.gov.in<br>
+&nbsp;&nbsp;• Deadline: 15 days before sowing cutoff date<br>
+<b>How to Claim:</b><br>
+&nbsp;&nbsp;1. Intimate loss to insurance company within 72 hours of damage<br>
+&nbsp;&nbsp;2. Call crop loss helpline: 14447<br>
+&nbsp;&nbsp;3. OR notify through bank or CSC<br>
+<b>Claim Processing:</b> Within 30 days of harvest; directly to bank account<br>
+<b>Mid-Season Calamity:</b> 25% advance payment given immediately<br>
+<b>Helpline:</b> 14447 | pmfby.gov.in`
+                },
+                {
+                    kw: ["mgnrega", "nrega", "mahatma gandhi", "job card", "100 days work", "mnrega"],
+                    a: `🏗️ <b>MGNREGA — 100 Days Work Guarantee</b><br><br>
+<b>What it is:</b> Legal guarantee of 100 days paid work per household per year<br>
+<b>Wage:</b> State-wise wage (₹220–₹357/day); paid directly to bank/PO account<br>
+<b>Who can apply:</b> Any adult rural household member (willing to do unskilled work)<br>
+<b>How to Register:</b><br>
+&nbsp;&nbsp;• Visit Gram Panchayat with Aadhaar + photo<br>
+&nbsp;&nbsp;• Get Job Card (free, within 15 days of application)<br>
+<b>How to Get Work:</b><br>
+&nbsp;&nbsp;• Write application to Gram Panchayat requesting work<br>
+&nbsp;&nbsp;• Work must be provided within 15 days or unemployment allowance paid<br>
+<b>Type of Work:</b> Water conservation, road construction, planting trees, farm ponds, etc.<br>
+<b>Check Work & Payment:</b><br>
+&nbsp;&nbsp;• nrega.nic.in → Enter state → district → Gram Panchayat<br>
+&nbsp;&nbsp;• NREGASoft App<br>
+<b>Helpline:</b> 1800-111-555 (free)`
+                }
+            ],
+            education: [
+                {
+                    kw: ["scholarship", "study", "school fees", "student", "student scholarship", "chhatravritti"],
+                    a: `📚 <b>Student Scholarships — Complete List</b><br><br>
+<b>1. National Means-cum-Merit Scholarship (NMMS):</b><br>
+&nbsp;&nbsp;• ₹12,000/year for Class 9–12<br>
+&nbsp;&nbsp;• For govt school students; family income < ₹3.5 lakh/year<br>
+&nbsp;&nbsp;• Apply through State Scholarship Portal<br>
+<b>2. Pre-Matric Scholarship (Class 1–10):</b><br>
+&nbsp;&nbsp;• For SC/ST/OBC/Minority students<br>
+&nbsp;&nbsp;• Amount: ₹150–₹350/month + ₹750 one-time grant<br>
+<b>3. Post-Matric Scholarship (Class 11 onwards):</b><br>
+&nbsp;&nbsp;• Full tuition fees + maintenance allowance<br>
+&nbsp;&nbsp;• For SC (Ministry of Social Justice) / ST (Ministry of Tribal) / OBC / Minority<br>
+<b>4. Begum Hazrat Mahal (Minority Girls):</b><br>
+&nbsp;&nbsp;• ₹5,000–₹6,000/year for Class 9–12<br>
+<b>Apply at:</b> scholarships.gov.in (National Scholarship Portal)<br>
+<b>Documents:</b> Marksheet, caste/income certificate, Aadhaar, bank account<br>
+<b>Helpline:</b> 0120-6619540`
+                },
+                {
+                    kw: ["literacy", "read", "write", "learn", "adult education", "ULLAS", "padna", "likhna"],
+                    a: `📖 <b>Adult Literacy & ULLAS Program</b><br><br>
+<b>ULLAS (New India Literacy Program):</b><br>
+&nbsp;&nbsp;• FREE education for adults 15 years and above<br>
+&nbsp;&nbsp;• Goal: Make 5 crore people literate by 2027<br>
+&nbsp;&nbsp;• Covers: Reading, writing, numeracy, digital skills, financial literacy<br>
+<b>How to Join:</b><br>
+&nbsp;&nbsp;• Visit nearest primary school or Gram Panchayat<br>
+&nbsp;&nbsp;• Contact headmaster or ASHA/Anganwadi worker<br>
+&nbsp;&nbsp;• No age limit, no fees, no exams to join<br>
+<b>Classes:</b> Morning or evening sessions at local school (flexible timing)<br>
+<b>Materials:</b> Free books in regional languages (provided by government)<br>
+<b>Volunteer Teachers:</b> School students teach adults in their community<br>
+<b>Digital Literacy:</b><br>
+&nbsp;&nbsp;• PMGDISHA: Free digital training (internet, phone, UPI, email)<br>
+&nbsp;&nbsp;• 3 months course at nearest CSC<br>
+&nbsp;&nbsp;• pmgdisha.in to find nearest centre<br>
+<b>Helpline:</b> 1800-180-9588`
+                }
+            ],
+            livestock: [
+                {
+                    kw: ["cow", "cattle", "buffalo", "dairy", "milk", "pashu", "gai", "bhains"],
+                    a: `🐄 <b>Cattle & Buffalo Farming Guide</b><br><br>
+<b>High-Yield Breeds:</b><br>
+&nbsp;&nbsp;• Cows: HF (Holstein Friesian), Jersey, Gir, Sahiwal<br>
+&nbsp;&nbsp;• Buffaloes: Murrah, Surti, Jaffarabadi<br>
+&nbsp;&nbsp;• Hybrid cows: HF×Sahiwal cross — best for small farmers<br>
+<b>Feeding (per animal per day):</b><br>
+&nbsp;&nbsp;• Dry fodder: 5–10 kg (straw/silage)<br>
+&nbsp;&nbsp;• Green fodder: 15–20 kg (Napier grass, maize, bajra)<br>
+&nbsp;&nbsp;• Concentrate: 1–1.5 kg per 2.5 litre milk produced<br>
+&nbsp;&nbsp;• Clean water: 40–60 litres/day<br>
+&nbsp;&nbsp;• Mineral mixture: 50g/day (prevents milk fever, reproductive issues)<br>
+<b>Vaccination Schedule (Mandatory):</b><br>
+&nbsp;&nbsp;• FMD (Foot & Mouth Disease): Every 6 months (FREE by govt)<br>
+&nbsp;&nbsp;• HS (Hemorrhagic Septicemia): Before monsoon every year<br>
+&nbsp;&nbsp;• BQ (Black Quarter): Annually before monsoon<br>
+<b>Deworming:</b> Every 6 months with Albendazole (10mg/kg body weight)<br>
+<b>Housing:</b> Clean shed, 40 sq ft/animal, proper drainage, no dampness<br>
+<b>Helpline:</b> 1962 (Pashu Helpline, free 24×7)`
+                },
+                {
+                    kw: ["goat", "bakri", "sheep", "sheep farming", "goat rearing", "small ruminant"],
+                    a: `🐐 <b>Goat & Sheep Farming Guide</b><br><br>
+<b>Popular Breeds:</b><br>
+&nbsp;&nbsp;• Goat (Meat): Boer, Sirohi, Barbari, Osmanabadi<br>
+&nbsp;&nbsp;• Goat (Milk): Jamunapari, Beetal<br>
+&nbsp;&nbsp;• Sheep (Wool): Merino, Chokla | Sheep (Meat): Nellore, Deccani<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Pasture grazing 6–8 hours/day<br>
+&nbsp;&nbsp;• Supplement with 200–300g concentrate for pregnant/lactating goats<br>
+&nbsp;&nbsp;• Mineral block should always be available<br>
+<b>Health Management:</b><br>
+&nbsp;&nbsp;• PPR Vaccination (Goat Plague): Every year (FREE at govt vet centre)<br>
+&nbsp;&nbsp;• Enterotoxaemia (ET): Annually before monsoon<br>
+&nbsp;&nbsp;• FMD: Every 6 months for goats in endemic areas<br>
+&nbsp;&nbsp;• Deworming: Every 3 months<br>
+<b>Common Problems:</b><br>
+&nbsp;&nbsp;• Bloat (gas in stomach): Stand goat upright, massage, give 50ml mustard oil<br>
+&nbsp;&nbsp;• Diarrhea: ORS + electrolytes + consult vet<br>
+<b>Profit Potential:</b> Goat gives 2 kids/year; market value ₹3,000–₹8,000/kid`
+                },
+                {
+                    kw: ["poultry", "chicken", "hen", "murgi", "egg", "backyard poultry", "broiler", "layer"],
+                    a: `🐓 <b>Poultry Farming Guide</b><br><br>
+<b>Types:</b><br>
+&nbsp;&nbsp;• Layer birds: Egg production (300+ eggs/year per hen)<br>
+&nbsp;&nbsp;• Broiler birds: Meat in 6 weeks (1.8–2 kg body weight)<br>
+&nbsp;&nbsp;• Backyard poultry (Desi/Kadaknath): Low cost, high price<br>
+<b>Housing:</b><br>
+&nbsp;&nbsp;• 1 sq ft/bird (cage) or 2 sq ft (floor)<br>
+&nbsp;&nbsp;• Ventilation, no dampness, protection from rain and predators<br>
+<b>Feeding:</b><br>
+&nbsp;&nbsp;• Starter feed (0–3 weeks): 23% protein<br>
+&nbsp;&nbsp;• Grower feed (3–6 weeks): 20% protein<br>
+&nbsp;&nbsp;• Layer feed: 16% protein + extra calcium<br>
+<b>Vaccination:</b><br>
+&nbsp;&nbsp;• Ranikhet (ND): Day 7 + Day 28 + every 3 months<br>
+&nbsp;&nbsp;• Gumboro (IBD): Day 14 + Day 28<br>
+&nbsp;&nbsp;• Fowl Pox: 6 weeks of age<br>
+<b>Biosecurity:</b> Keep visitors away; disinfect shed regularly<br>
+<b>Helpline:</b> 1962 Pashu Helpline`
+                }
+            ],
+            finance: [
+                {
+                    kw: ["save money", "saving", "bachat", "savings", "piggy bank", "recurring deposit"],
+                    a: `💰 <b>Smart Savings for Rural Families</b><br><br>
+<b>Post Office Savings Schemes:</b><br>
+&nbsp;&nbsp;• <b>Sukanya Samriddhi (for girl child):</b> 8.2% interest — best scheme!<br>&nbsp;&nbsp;Min ₹250/year; max ₹1.5 lakh/year; tax-free maturity<br>
+&nbsp;&nbsp;• <b>PPF (Public Provident Fund):</b> 7.1% interest, 15-year lock-in, tax-free<br>
+&nbsp;&nbsp;• <b>NSC (National Savings Certificate):</b> 7.7%, 5-year deposit, guaranteed<br>
+&nbsp;&nbsp;• <b>RD (Recurring Deposit):</b> Save ₹100/month; good for regular income families<br>
+<b>Jan Dhan Account:</b><br>
+&nbsp;&nbsp;• Zero balance account at any bank<br>
+&nbsp;&nbsp;• Comes with RuPay debit card + ₹2 lakh accident insurance FREE<br>
+&nbsp;&nbsp;• Overdraft facility of ₹10,000 after 6 months<br>
+<b>Financial Tips:</b><br>
+&nbsp;&nbsp;• Avoid money lenders — interest 2–5% per month is exploitative<br>
+&nbsp;&nbsp;• Use SHG (Self Help Group) for micro-savings and credit<br>
+&nbsp;&nbsp;• Never put all savings in one place<br>
+<b>Open account at:</b> Any nationalized bank or post office (Aadhaar required)`
+                },
+                {
+                    kw: ["shg", "self help group", "mahila mandal", "women group", "micro finance", "bachat gat"],
+                    a: `👩‍👩‍👧 <b>Self Help Groups (SHG) — How to Benefit</b><br><br>
+<b>What is SHG?</b> Group of 10–20 women who save together and support each other<br>
+<b>Benefits of Joining SHG:</b><br>
+&nbsp;&nbsp;• Pool savings → get loans at low interest (1–2%/month)<br>
+&nbsp;&nbsp;• No collateral needed for loans<br>
+&nbsp;&nbsp;• Bank loan linkage: ₹1–10 lakh for group business<br>
+&nbsp;&nbsp;• Government schemes accessed easily as a group<br>
+<b>How to Form SHG:</b><br>
+&nbsp;&nbsp;• 10–20 women from same village/locality<br>
+&nbsp;&nbsp;• Open a group bank account<br>
+&nbsp;&nbsp;• Save ₹50–₹200/month each; maintain records<br>
+&nbsp;&nbsp;• Register with Block Development Office for recognition<br>
+<b>Government Support:</b><br>
+&nbsp;&nbsp;• NRLM (DAY-NRLM): Revolving fund ₹15,000 + Community Investment Fund<br>
+&nbsp;&nbsp;• Bank loan at 7% interest (subsidized)<br>
+&nbsp;&nbsp;• Lakhpati Didi program: Help each SHG member earn ₹1 lakh/year<br>
+<b>Contact:</b> Gram Panchayat or Block Mission Management Unit`
+                },
+                {
+                    kw: ["mudra loan", "business loan", "small business", "self employment", "startup loan", "enterprise"],
+                    a: `🏢 <b>MUDRA Loan — Business Finance</b><br><br>
+<b>PM MUDRA Yojana:</b> Loans for small/micro businesses without collateral<br>
+<b>Three Categories:</b><br>
+&nbsp;&nbsp;• <b>Shishu:</b> Up to ₹50,000 (new/very small businesses)<br>
+&nbsp;&nbsp;• <b>Kishore:</b> ₹50,001 to ₹5 lakh (growing businesses)<br>
+&nbsp;&nbsp;• <b>Tarun:</b> ₹5 lakh to ₹10 lakh (established businesses)<br>
+<b>Who can apply:</b><br>
+&nbsp;&nbsp;• Any non-farm micro/small business<br>
+&nbsp;&nbsp;• Street vendors, shops, artisans, tailors, repair shops<br>
+&nbsp;&nbsp;• Vegetable/fruit sellers, food stalls, beauty parlours<br>
+<b>Documents:</b> Aadhaar + PAN + bank statement + business proof/plan<br>
+<b>How to Apply:</b><br>
+&nbsp;&nbsp;• Visit any bank or NBFC branch<br>
+&nbsp;&nbsp;• Apply online: mudra.org.in<br>
+&nbsp;&nbsp;• Or through Udyami Mitra portal<br>
+<b>Interest Rate:</b> 10–12% (varies by bank; no collateral for Shishu/Kishore)<br>
+<b>Helpline:</b> 1800-180-1111 (SIDBI)`
+                }
+            ],
+            market: [
+                {
+                    kw: ["market price", "mandi", "sabzi", "vegetable price", "crop price", "mandibhav", "wholesale"],
+                    a: `📊 <b>Crop Market Price Information</b><br><br>
+<b>Where to Check Live Mandi Prices (Free):</b><br>
+&nbsp;&nbsp;• <b>Agmarknet:</b> agmarknet.nic.in — official govt mandi prices<br>
+&nbsp;&nbsp;• <b>eNAM Portal:</b> enam.gov.in — national electronic market<br>
+&nbsp;&nbsp;• <b>Kisan Suvidha App:</b> Market prices + weather + crop advisory<br>
+&nbsp;&nbsp;• <b>SMS:</b> Send crop name + state to 55444 for price<br>
+<b>MSP (Minimum Support Price) 2024–25:</b><br>
+&nbsp;&nbsp;• Paddy (Common): ₹2,300/quintal<br>
+&nbsp;&nbsp;• Wheat: ₹2,275/quintal<br>
+&nbsp;&nbsp;• Maize: ₹2,090/quintal<br>
+&nbsp;&nbsp;• Tur Dal: ₹7,550/quintal<br>
+&nbsp;&nbsp;• Cotton (Medium): ₹7,121/quintal<br>
+<b>Sell at MSP:</b><br>
+&nbsp;&nbsp;• Register on PM-KISAN/State portal for MSP procurement<br>
+&nbsp;&nbsp;• Bring produce to nearest procurement centre with Aadhaar + land record<br>
+<b>FPO/Cooperatives:</b> Join for better collective bargaining and direct market access`
+                },
+                {
+                    kw: ["fpo", "farmer producer", "cooperative", "collective farming", "group selling"],
+                    a: `🤝 <b>Farmer Producer Organizations (FPO) Guide</b><br><br>
+<b>What is FPO?</b> A group of farmers who collectively produce, process and sell their produce<br>
+<b>Benefits of Joining FPO:</b><br>
+&nbsp;&nbsp;• Buy inputs (seed, fertilizer) at wholesale rates — saves 15–20%<br>
+&nbsp;&nbsp;• Sell produce directly to buyers — better price<br>
+&nbsp;&nbsp;• Access to cold storage, processing facilities<br>
+&nbsp;&nbsp;• Bank loan as group is easier<br>
+&nbsp;&nbsp;• Export directly to foreign markets<br>
+<b>Government Support for FPOs:</b><br>
+&nbsp;&nbsp;• ₹18 lakh equity grant per FPO under Agri Infrastructure Fund<br>
+&nbsp;&nbsp;• NABARD + SFAC provide handholding support<br>
+&nbsp;&nbsp;• 3 year support from Cluster Based Business Organisations (CBBO)<br>
+<b>10,000 FPO Scheme:</b><br>
+&nbsp;&nbsp;• Govt forming 10,000 new FPOs across India<br>
+&nbsp;&nbsp;• Minimum 300 members (100 for hill areas)<br>
+<b>How to Join/Form:</b> Contact nearest ATMA office, NABARD or Krishi Vigyan Kendra`
+                }
+            ]
+        };
+
+        // --- 2. STATE MANAGEMENT ---
+        const state = {
+            messages: [],
+            topic: 'all',
+            lang: 'en-IN',
+            isOnline: navigator.onLine,
+            isTyping: false,
+            isListening: false,
+            showWeather: false,
+            showEmergency: false,
+            darkMode: false,
+            autoTTS: false,
+            soundOn: true,
+            saverMode: false,
+            msgCount: 0,
+            totalBytes: 0,
+            sessionStart: Date.now(),
+            weather: null,
+            isFirstMessage: true,
+            recognition: null
+        };
+
+        // --- 3. DOM ELEMENTS ---
+        const els = {
+            body: document.body,
+            chatArea: document.getElementById('chat-area'),
+            textInput: document.getElementById('text-input'),
+            sendBtn: document.getElementById('send-btn'),
+            micBtn: document.getElementById('mic-btn'),
+            progressBar: document.getElementById('progress-bar'),
+            offlineBanner: document.getElementById('offline-banner'),
+            statusDot: document.getElementById('status-dot'),
+            statusText: document.getElementById('status-text'),
+            tabsContainer: document.getElementById('tabs-container'),
+            quickActions: document.getElementById('quick-actions'),
+            weatherContainer: document.getElementById('weather-container'),
+            emergencyContainer: document.getElementById('emergency-container'),
+            statMsgs: document.getElementById('stat-msgs'),
+            statBytes: document.getElementById('stat-bytes'),
+            statMode: document.getElementById('stat-mode'),
+            statTime: document.getElementById('stat-time'),
+            statTempContainer: document.getElementById('stat-temp-container'),
+            statTemp: document.getElementById('stat-temp'),
+            settingsModal: document.getElementById('settings-modal'),
+            infoModal: document.getElementById('info-modal'),
+            toggleDark: document.getElementById('toggle-dark'),
+            toggleTTS: document.getElementById('toggle-tts'),
+            toggleSound: document.getElementById('toggle-sound'),
+            toggleSaver: document.getElementById('toggle-saver'),
+            modalLangSelect: document.getElementById('modal-lang-select'),
+            inputLangSelect: document.getElementById('input-lang-select')
+        };
+
+        // --- 4. HELPER FUNCTIONS ---
+        const getTime = () => new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        
+        const formatBytes = (bytes) => {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        };
+
+        const stripTags = (html) => {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            return div.textContent || div.innerText || '';
+        };
+
+        const getChips = (t) => {
+            const c = {
+                all: ['Rice farming', 'Cow care', 'PM KISAN', 'MUDRA loan'],
+                agriculture: ['Soil health tips', 'Drip irrigation', 'Pest control', 'Organic farming'],
+                health: ['Snake bite first aid', 'Pregnancy care', 'Fever treatment', 'Child nutrition'],
+                weather: ['Flood preparation', 'Drought advisory', 'Weather apps'],
+                government: ['Ayushman Bharat', 'KCC loan', 'MGNREGA work', 'PM Awas Yojana'],
+                education: ['Student scholarships', 'Adult literacy', 'Skill training'],
+                livestock: ['Buffalo farming', 'Goat rearing', 'Poultry guide', 'Fish farming'],
+                finance: ['SHG benefits', 'MUDRA loan', 'UPI payments', 'Post office savings'],
+                market: ['MSP prices', 'FPO benefits', 'Crop storage tips']
+            };
+            return c[t] || c.all;
+        };
+
+        const speak = (text) => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utt = new SpeechSynthesisUtterance(text.substring(0, 300));
+                utt.lang = state.lang;
+                utt.rate = 0.9;
+                window.speechSynthesis.speak(utt);
+            }
+        };
+
+        const updateStats = () => {
+            els.statMsgs.textContent = state.msgCount;
+            els.statBytes.textContent = formatBytes(state.totalBytes);
+            els.statMode.textContent = state.saverMode ? 'Data Saver' : (state.isOnline ? 'Normal' : 'Offline KB');
+            const s = Math.floor((Date.now() - state.sessionStart) / 1000);
+            const m = Math.floor(s / 60);
+            const ss = s % 60;
+            els.statTime.textContent = `${m}:${ss < 10 ? '0' : ''}${ss}`;
+        };
+
+        const setProgress = (val) => {
+            els.progressBar.style.width = `${val}%`;
+            if (val === 100) setTimeout(() => els.progressBar.style.width = '0%', 600);
+        };
+
+        const toggleModal = (id) => {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+        };
+
+        const toggleSetting = (key) => {
+            state[key] = !state[key];
+            renderSettings();
+            if (key === 'darkMode') renderTheme();
+        };
+
+        const updateLang = (val) => {
+            state.lang = val;
+            els.modalLangSelect.value = val;
+            els.inputLangSelect.value = val;
+        };
+
+        const renderTheme = () => {
+            if (state.darkMode) els.body.classList.add('dark-mode');
+            else els.body.classList.remove('dark-mode');
+        };
+
+        const renderSettings = () => {
+            const updateToggle = (el, val) => {
+                if (val) el.classList.add('active');
+                else el.classList.remove('active');
+            };
+            updateToggle(els.toggleDark, state.darkMode);
+            updateToggle(els.toggleTTS, state.autoTTS);
+            updateToggle(els.toggleSound, state.soundOn);
+            updateToggle(els.toggleSaver, state.saverMode);
+        };
+
+        // --- 5. CORE LOGIC: PROCESS QUERY ---
+        const processQuery = (query) => {
+            const ql = query.toLowerCase();
+
+            // Greetings
+            if (/^(hi|hello|namaste|hey|namaskar|good morning|good evening|jai|pranam|vanakkam|salam)/i.test(ql)) {
+                return {
+                    text: "🙏 <b>Namaste!</b> How can I help you today?<br>Choose a topic tab or type your question.",
+                    chips: getChips(state.topic)
+                };
+            }
+
+            // Thanks
+            if (/thank|dhanyawad|shukriya|thanks/i.test(ql)) {
+                return {
+                    text: "😊 You're welcome! I'm always here to help.<br>Feel free to ask anything else! 🌾"
+                };
+            }
+
+            // Help
+            if (/help|what can you|capabilities|features|kya kar sakte/i.test(ql)) {
+                return {
+                    text: "🤖 <b>I can help you with:</b><br><br>" +
+                        "🌱 <b>Agriculture</b> — Rice, Wheat, Maize, Cotton, Vegetables, Organic Farming<br>" +
+                        "❤️ <b>Health</b> — Fever, Diarrhea, Pregnancy, Snake Bite, First Aid, Diabetes<br>" +
+                        "🌦️ <b>Weather</b> — Monsoon, Drought, Heat Wave, Storm Safety<br>" +
+                        "🏛️ <b>Government</b> — PM-KISAN, Ayushman, Ration, KCC, MGNREGA, PMAY<br>" +
+                        "📚 <b>Education</b> — Scholarships, Literacy, Skill Training<br>" +
+                        "🐄 <b>Livestock</b> — Cattle, Goat, Poultry, Fish Farming<br>" +
+                        "💰 <b>Finance</b> — Savings, SHG, MUDRA Loan, Digital Payments<br>" +
+                        "📊 <b>Market</b> — MSP Prices, FPO, Storage Tips",
+                    chips: ['Rice farming tips', 'PM KISAN details', 'How to raise goats', 'MUDRA loan details']
+                };
+            }
+
+            // Emergency
+            if (/emergency|help me|accident|fire|police|ambulance|108|100|101/i.test(ql)) {
+                return {
+                    text: "🆘 <b>EMERGENCY CONTACTS:</b><br><br>" +
+                        "🚑 Ambulance: <b>108</b><br>" +
+                        "👮 Police: <b>100</b><br>" +
+                        "🚒 Fire: <b>101</b><br>" +
+                        "🌊 NDRF Disaster: <b>1078</b><br>" +
+                        "👩 Women Safety: <b>181</b><br>" +
+                        "🌾 Kisan Helpline: <b>1800-180-1551</b><br>" +
+                        "🏥 Health: <b>104</b><br><br>" +
+                        "<b>Tap the 🆘 button at the top for quick dial!</b>"
+                };
+            }
+
+            // Weather (live attempt)
+            if (/current weather|aaj ka mausam|today weather|temperature today/i.test(ql)) {
+                loadWeather();
+                return {
+                    text: "🌤️ I'm fetching the latest weather data for you...<br>" +
+                        "You can also tap the <b>🌤️ button</b> in the header to see the weather widget!<br><br>" +
+                        "For daily farm-specific forecasts, use <b>Meghdoot App</b> or SMS your pincode to <b>7738299899</b>"
+                };
+            }
+
+            // Search KB
+            const allEntries = state.topic === 'all'
+                ? Object.values(KB).flat()
+                : (KB[state.topic] || Object.values(KB).flat());
+
+            let best = null, score = 0;
+            for (const e of allEntries) {
+                let s = 0;
+                for (const k of e.kw) {
+                    if (ql.includes(k)) s += k.split(' ').length;
+                }
+                if (s > score) {
+                    score = s;
+                    best = e;
+                }
+            }
+
+            if (best && score > 0) {
+                return {
+                    text: best.a,
+                    chips: getChips(state.topic)
+                };
+            } else {
+                // Fuzzy partial match
+                let partial = null, ps = 0;
+                for (const e of Object.values(KB).flat()) {
+                    for (const k of e.kw) {
+                        const words = k.split(' ');
+                        for (const w of words) {
+                            if (w.length > 3 && ql.includes(w)) {
+                                if (1 > ps) {
+                                    ps = 1;
+                                    partial = e;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (partial) {
+                    return {
+                        text: partial.a,
+                        chips: getChips('all')
+                    };
+                } else {
+                    return {
+                        text: "🤔 <b>I couldn't find that in my local knowledge base.</b><br><br>" +
+                            "Try asking about:<br>" +
+                            "• <i>Rice/Wheat/Maize farming</i><br>" +
+                            "• <i>Fever, diarrhea, pregnancy treatment</i><br>" +
+                            "• <i>PM-KISAN, Ayushman Bharat, MGNREGA</i><br>" +
+                            "• <i>Goat/Poultry/Fish farming</i><br>" +
+                            "• <i>MUDRA loan, SHG, savings tips</i><br>" +
+                            "• <i>Monsoon/drought advisory</i><br><br>" +
+                            "📡 <i>When online, I can search the internet for your query.</i>",
+                        chips: ['Rice farming', 'Fever treatment', 'PM KISAN', 'Goat farming']
+                    };
+                }
+            }
+        };
+
+        // --- 6. MESSAGING LOGIC ---
+        const addMessage = (role, text, chips = null) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message-row ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = role === 'user' ? '👤' : '🌾';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            const content = document.createElement('div');
+            content.className = 'bubble-content';
+            content.innerHTML = text;
+
+            const footer = document.createElement('div');
+            footer.className = 'msg-footer';
+            const time = document.createElement('span');
+            time.textContent = getTime();
+            footer.appendChild(time);
+
+            if (role === 'bot') {
+                const readBtn = document.createElement('button');
+                readBtn.className = 'read-aloud-btn';
+                readBtn.textContent = '🔊 Read';
+                readBtn.onclick = () => speak(stripTags(text));
+                footer.appendChild(readBtn);
+            }
+
+            bubble.appendChild(content);
+            
+            if (chips && chips.length > 0) {
+                const chipContainer = document.createElement('div');
+                chipContainer.className = 'chips-container';
+                chips.forEach(chip => {
+                    const chipBtn = document.createElement('button');
+                    chipBtn.className = 'chip';
+                    chipBtn.textContent = chip;
+                    chipBtn.onclick = () => sendMessage(chip);
+                    chipContainer.appendChild(chipBtn);
+                });
+                bubble.appendChild(chipContainer);
+            }
+
+            bubble.appendChild(footer);
+
+            if (role === 'user') {
+                msgDiv.appendChild(bubble);
+                msgDiv.appendChild(avatar);
+            } else {
+                msgDiv.appendChild(avatar);
+                msgDiv.appendChild(bubble);
+            }
+
+            els.chatArea.appendChild(msgDiv);
+            els.chatArea.scrollTop = els.chatArea.scrollHeight;
+        };
+
+        const showTyping = () => {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'message-row bot';
+            typingDiv.innerHTML = `
+                <div class="avatar">🌾</div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            els.chatArea.appendChild(typingDiv);
+            els.chatArea.scrollTop = els.chatArea.scrollHeight;
+        };
+
+        const removeTyping = () => {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
+        };
+
+        const sendMessage = (textOverride = null) => {
+            const text = textOverride || els.textInput.value.trim();
+            if (!text) return;
+
+            if (state.isFirstMessage) {
+                state.isFirstMessage = false;
+                els.quickActions.style.display = 'none';
+            }
+
+            // User Message
+            addMessage('user', text);
+            state.msgCount++;
+            state.totalBytes += text.length;
+            els.textInput.value = '';
+            els.sendBtn.disabled = true;
+            setProgress(30);
+
+            // Bot Response
+            state.isTyping = true;
+            showTyping();
+            
+            const delay = state.saverMode ? 400 : 1000;
+
+            setTimeout(() => {
+                const response = processQuery(text);
+                removeTyping();
+                
+                addMessage('bot', response.text, response.chips);
+                state.msgCount++;
+                state.totalBytes += response.text.length;
+                state.isTyping = false;
+                setProgress(100);
+                updateStats();
+
+                if (state.soundOn) {
+                    // Simple beep using AudioContext or just logic placeholder
+                    // Since we can't easily embed audio files, we rely on TTS or visual cues
+                }
+
+                if (state.autoTTS) {
+                    speak(stripTags(response.text));
+                }
+            }, delay);
+        };
+
+        // --- 7. WEATHER LOGIC ---
+        const loadWeather = () => {
+            if (!state.isOnline) {
+                alert("Weather data requires internet connection.");
+                return;
+            }
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        try {
+                            const res = await fetch(
+                                `https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}` +
+                                `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,apparent_temperature,weather_code` +
+                                `&timezone=auto`
+                            );
+                            const data = await res.json();
+                            const c = data.current;
+                            state.weather = {
+                                temp: Math.round(c.temperature_2m),
+                                feels: Math.round(c.apparent_temperature),
+                                hum: c.relative_humidity_2m,
+                                wind: Math.round(c.wind_speed_10m),
+                                code: c.weather_code,
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude
+                            };
+                            renderWeather();
+                        } catch (e) {
+                            console.error(e);
+                            alert("Could not fetch weather data.");
+                        }
+                    },
+                    () => alert("Could not get location.")
+                );
+            }
+        };
+
+        const wmoToEmoji = (c) => {
+            if (c === 0) return '☀️';
+            if (c <= 2) return '⛅';
+            if (c === 3) return '☁️';
+            if (c <= 49) return '🌫️';
+            if (c <= 69) return '🌧️';
+            if (c <= 79) return '🌨️';
+            if (c <= 84) return '🌦️';
+            if (c <= 94) return '⛈️';
+            return '🌩️';
+        };
+
+        const wmoToDesc = (c) => {
+            if (c === 0) return 'Clear sky';
+            if (c <= 2) return 'Partly cloudy';
+            if (c === 3) return 'Overcast';
+            if (c <= 49) return 'Foggy / Mist';
+            if (c <= 69) return 'Rain showers';
+            if (c <= 79) return 'Snow';
+            if (c <= 84) return 'Rain showers';
+            return 'Thunderstorm';
+        };
+
+        const renderWeather = () => {
+            if (!state.weather) return;
+            const w = state.weather;
+            els.weatherContainer.innerHTML = `
+                <div class="weather-card">
+                    <div class="weather-top">
+                        <div>
+                            <div style="font-size:0.8rem; opacity:0.9;">📍 Lat:${w.lat.toFixed(2)} Lon:${w.lon.toFixed(2)}</div>
+                            <div class="weather-temp">${w.temp}°C</div>
+                            <div class="weather-desc">${wmoToDesc(w.code)}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:3rem;">${wmoToEmoji(w.code)}</div>
+                            <div style="font-size:0.8rem; opacity:0.9;">${new Date().toLocaleDateString('en-IN')}</div>
+                        </div>
+                    </div>
+                    <div class="weather-details">
+                        <div>💧 Humidity: <strong>${w.hum}%</strong></div>
+                        <div>💨 Wind: <strong>${w.wind} km/h</strong></div>
+                        <div>🌡️ Feels: <strong>${w.feels}°C</strong></div>
+                    </div>
+                </div>
+            `;
+            els.statTempContainer.style.display = 'inline';
+            els.statTemp.textContent = `${w.temp}°C`;
+        };
+
+        const showWeather = () => {
+            state.showWeather = !state.showWeather;
+            els.weatherContainer.style.display = state.showWeather ? 'block' : 'none';
+            if (state.showWeather && !state.weather) loadWeather();
+        };
+
+        // --- 8. EMERGENCY LOGIC ---
+        const showEmergency = () => {
+            state.showEmergency = !state.showEmergency;
+            if (state.showEmergency) {
+                const contacts = [
+                    { num: '108', icon: '🚑', label: 'Ambulance' },
+                    { num: '100', icon: '👮', label: 'Police' },
+                    { num: '101', icon: '🚒', label: 'Fire' },
+                    { num: '1078', icon: '🌊', label: 'NDRF' },
+                    { num: '181', icon: '👩', label: 'Women' },
+                    { num: '1800-180-1551', icon: '🌾', label: 'Kisan' }
+                ];
+                els.emergencyContainer.innerHTML = `
+                    <div class="emergency-card">
+                        <div class="emergency-title">🆘 Emergency Helplines — Tap to Call</div>
+                        <div class="emergency-grid">
+                            ${contacts.map(c => `
+                                <a href="tel:${c.num}" style="text-decoration:none;">
+                                    <div class="emergency-btn">
+                                        <span>${c.icon}</span>
+                                        <div>${c.label}</div>
+                                        <div style="font-size:0.8rem;">${c.num}</div>
+                                    </div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                els.emergencyContainer.style.display = 'block';
+            } else {
+                els.emergencyContainer.style.display = 'none';
+            }
+        };
+
+        // --- 9. VOICE RECOGNITION ---
+        const toggleMic = () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech recognition not supported in this browser. Try Chrome.");
+                return;
+            }
+
+            if (!state.recognition) {
+                state.recognition = new SpeechRecognition();
+                state.recognition.continuous = false;
+                state.recognition.interimResults = false;
+                state.recognition.lang = state.lang;
+
+                state.recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    els.textInput.value = transcript;
+                    state.isListening = false;
+                    els.micBtn.classList.remove('listening');
+                    setTimeout(() => sendMessage(transcript), 500);
+                };
+
+                state.recognition.onerror = () => {
+                    state.isListening = false;
+                    els.micBtn.classList.remove('listening');
+                };
+                state.recognition.onend = () => {
+                    state.isListening = false;
+                    els.micBtn.classList.remove('listening');
+                };
+            }
+
+            if (state.isListening) {
+                state.recognition.stop();
+                state.isListening = false;
+                els.micBtn.classList.remove('listening');
+            } else {
+                state.recognition.lang = state.lang; // Update lang before start
+                state.recognition.start();
+                state.isListening = true;
+                els.micBtn.classList.add('listening');
+            }
+        };
+
+        // --- 10. INITIALIZATION & EVENTS ---
+        const initTabs = () => {
+            const topics = [
+                { key: 'all', label: 'All', icon: '🌐' },
+                { key: 'agriculture', label: 'Agriculture', icon: '🌱' },
+                { key: 'health', label: 'Health', icon: '❤️' },
+                { key: 'weather', label: 'Weather', icon: '🌦️' },
+                { key: 'government', label: 'Gov Schemes', icon: '🏛️' },
+                { key: 'education', label: 'Education', icon: '📚' },
+                { key: 'livestock', label: 'Livestock', icon: '🐄' },
+                { key: 'finance', label: 'Finance', icon: '💰' },
+                { key: 'market', label: 'Market', icon: '📊' }
+            ];
+            
+            els.tabsContainer.innerHTML = topics.map(t => 
+                `<div class="tab ${state.topic === t.key ? 'active' : ''}" onclick="setTopic('${t.key}')">${t.icon} ${t.label}</div>`
+            ).join('');
+        };
+
+        window.setTopic = (t) => {
+            state.topic = t;
+            initTabs();
+        };
+
+        const initQuickActions = () => {
+            const actions = [
+                { icon: '🌱', title: 'Crop Advice', sub: 'Season & soil tips', query: 'Best crop for this season' },
+                { icon: '❤️', title: 'Health Help', sub: 'Symptoms & first aid', query: 'How to treat fever at home' },
+                { icon: '🏛️', title: 'Gov Schemes', sub: 'Benefits & apply', query: 'PM KISAN scheme details' },
+                { icon: '🌦️', title: 'Weather Tips', sub: 'Seasonal advisory', query: 'Flood and monsoon advisory' },
+                { icon: '🐄', title: 'Livestock Care', sub: 'Animal health', query: 'How to take care of cows' },
+                { icon: '💰', title: 'Finance Tips', sub: 'Savings & loans', query: 'How to save money and get loan' }
+            ];
+            els.quickActions.innerHTML = actions.map(a => `
+                <div class="qa-card" onclick="sendMessage('${a.query}')">
+                    <span class="qa-icon">${a.icon}</span>
+                    <div class="qa-title">${a.title}</div>
+                    <div class="qa-sub">${a.sub}</div>
+                </div>
+            `).join('');
+        };
+
+        const initEventListeners = () => {
+            // Online/Offline
+            window.addEventListener('online', () => {
+                state.isOnline = true;
+                els.statusDot.classList.remove('offline');
+                els.statusText.textContent = 'Online';
+                els.offlineBanner.style.display = 'none';
+            });
+            window.addEventListener('offline', () => {
+                state.isOnline = false;
+                els.statusDot.classList.add('offline');
+                els.statusText.textContent = 'Offline';
+                els.offlineBanner.style.display = 'block';
+            });
+
+            // Input handling
+            els.textInput.addEventListener('input', (e) => {
+                els.sendBtn.disabled = e.target.value.trim().length === 0;
+            });
+            els.textInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Sync selects
+            els.modalLangSelect.addEventListener('change', (e) => updateLang(e.target.value));
+            els.inputLangSelect.addEventListener('change', (e) => updateLang(e.target.value));
+        };
+
+        const showWelcomeMessage = () => {
+            setTimeout(() => {
+                addMessage('bot', 
+                    "👋 <b>Namaste! I am Gram Sahayak AI</b> 🌾<br><br>" +
+                    "I am your offline-ready rural assistant. I can help you with:<br>" +
+                    "🌱 Agriculture & Crops &nbsp;|&nbsp; ❤️ Health & First Aid<br>" +
+                    "🌦️ Weather Advisory &nbsp;|&nbsp; 🏛️ Government Schemes<br>" +
+                    "📚 Education &nbsp;|&nbsp; 🐄 Livestock &nbsp;|&nbsp; 💰 Finance &nbsp;|&nbsp; 📊 Market<br><br>" +
+                    "<i>Type your question below or tap 🎙️ to speak!</i>",
+                    ['Rice farming tips', 'How to treat fever', 'PM KISAN details', 'Cow rearing guide']
+                );
+            }, 600);
+        };
+
+        // --- START APP ---
+        const startApp = () => {
+            initTabs();
+            initQuickActions();
+            initEventListeners();
+            renderSettings();
+            
+            // Session Timer
+            setInterval(updateStats, 1000);
+            
+            // Welcome
+            showWelcomeMessage();
+        };
+
+        // Run
+        startApp();
+
+    </script>
+</body>
+</html>
