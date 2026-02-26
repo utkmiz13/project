@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="hi" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gram Sahayak AI - ग्राम सहायक AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0f1e;
+  --bg2: #111827;
+  --bg3: #1a2535;
+  --card: #162033;
+  --border: #243049;
+  --accent: #22c55e;
+  --accent2: #16a34a;
+  --text: #e8f0fe;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --orange: #f97316;
+  --gold: #f59e0b;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+[data-theme="light"] {
+  --bg: #f0fdf4;
+  --bg2: #ffffff;
+  --bg3: #dcfce7;
+  --card: #ffffff;
+  --border: #bbf7d0;
+  --accent: #16a34a;
+  --accent2: #15803d;
+  --text: #14532d;
+  --text2: #166534;
+  --text3: #86efac;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins','Noto Sans Devanagari',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 18px rgba(34,197,94,0.4);}
+.logo-name{font-size:17px;font-weight:700;color:var(--accent);line-height:1.1;}
+.logo-sub{font-size:10px;color:var(--text2);}
+.header-controls{display:flex;gap:8px;align-items:center;}
+.btn-icon{background:var(--bg3);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s;}
+.btn-icon:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+.lang-toggle{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;font-family:inherit;}
+.lang-toggle:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.status-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.nav-tabs{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 6px;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:11px 15px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;gap:5px;font-family:inherit;}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.main{padding:14px;max-width:900px;margin:0 auto;}
+.section{display:none;}
+.section.active{display:block;}
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 168px);}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.msg{display:flex;gap:8px;animation:fadeUp 0.25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;}}
+.msg.user{flex-direction:row-reverse;}
+.msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.msg.bot .msg-av{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+.msg.user .msg-av{background:linear-gradient(135deg,var(--blue),#6366f1);}
+.msg-bbl{max-width:78%;padding:11px 15px;border-radius:var(--radius-sm);font-size:13.5px;line-height:1.6;}
+.msg.bot .msg-bbl{background:var(--card);border:1px solid var(--border);border-top-left-radius:3px;}
+.msg.user .msg-bbl{background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff;border-top-right-radius:3px;}
+.msg-time{font-size:10px;color:var(--text3);margin-top:3px;}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:20px;margin-left:5px;}
+.badge-off{background:var(--orange);}
+.chat-input-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;gap:8px;align-items:flex-end;margin-top:10px;}
+.chat-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:13.5px;font-family:inherit;resize:none;max-height:90px;line-height:1.5;}
+.chat-input::placeholder{color:var(--text3);}
+.send-btn{background:var(--accent);border:none;color:#fff;width:40px;height:40px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:all 0.2s;flex-shrink:0;}
+.send-btn:hover{background:var(--accent2);}
+.quick-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.q-btn{background:var(--card);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:20px;font-size:11.5px;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+.q-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.typing{display:flex;gap:4px;align-items:center;}
+.typing span{width:7px;height:7px;background:var(--text2);border-radius:50%;animation:ty 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes ty{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+.offline-bar{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:10px;}
+.ol-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.ol-dot.off{background:var(--orange);}
+/* CALENDAR */
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-nav-btn{background:var(--card);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.cal-nav-btn:hover{background:var(--accent);color:#fff;}
+.cal-month-title{font-size:18px;font-weight:700;color:var(--accent);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px;}
+.cal-dname{text-align:center;font-size:11px;color:var(--text2);padding:5px 0;}
+.cal-day{text-align:center;padding:7px 3px;border-radius:7px;font-size:12.5px;cursor:pointer;transition:all .2s;min-height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+.cal-day:hover{background:var(--bg3);}
+.cal-day.today{background:var(--accent);color:#fff;font-weight:700;}
+.cal-day.has-ev::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--gold);}
+.cal-day.today.has-ev::after{background:#fff;}
+.cal-day.other{color:var(--text3);}
+.season-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+.s-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.s-card h3{font-size:13.5px;font-weight:700;margin-bottom:10px;}
+.s-card table{width:100%;border-collapse:collapse;font-size:12px;}
+.s-card th{color:var(--text2);font-weight:600;padding:5px 7px;text-align:left;border-bottom:1px solid var(--border);}
+.s-card td{padding:5px 7px;border-bottom:1px solid var(--border);color:var(--text2);}
+.s-card tr:last-child td{border:none;}
+.s-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;margin:2px;}
+.rb{background:rgba(59,130,246,.2);color:#93c5fd;}
+.kb{background:rgba(34,197,94,.2);color:#86efac;}
+.zb{background:rgba(249,115,22,.2);color:#fdba74;}
+/* SCHEMES */
+.schemes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;}
+.sc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;transition:all .2s;cursor:pointer;}
+.sc-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.sc-icon{font-size:26px;margin-bottom:8px;}
+.sc-title{font-size:13px;font-weight:700;margin-bottom:5px;}
+.sc-benefit{font-size:11.5px;color:var(--accent);font-weight:600;margin-bottom:6px;}
+.sc-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:14px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;max-width:480px;width:100%;max-height:82vh;overflow-y:auto;}
+.modal-close{float:right;background:var(--bg3);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:17px;}
+.modal-box p,.modal-box li{font-size:13px;color:var(--text2);margin:5px 0;line-height:1.6;}
+/* WEATHER */
+.w-card{background:linear-gradient(135deg,var(--bg2),var(--card));border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;margin-bottom:14px;}
+.w-temp{font-size:54px;font-weight:700;}
+.w-desc{font-size:14px;color:var(--text2);}
+.w-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+.w-stat{background:var(--bg3);border-radius:9px;padding:10px;text-align:center;}
+.w-val{font-size:17px;font-weight:700;color:var(--accent);}
+.w-lbl{font-size:11px;color:var(--text2);margin-top:2px;}
+.forecast{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;}
+.forecast::-webkit-scrollbar{display:none;}
+.fc-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;text-align:center;flex-shrink:0;min-width:76px;}
+.fc-day{font-size:11px;color:var(--text2);}
+.fc-icon{font-size:20px;margin:5px 0;}
+.fc-temp{font-size:12.5px;font-weight:600;}
+.loc-row{display:flex;gap:8px;margin-bottom:14px;}
+.loc-inp{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 13px;border-radius:9px;font-size:13px;font-family:inherit;outline:none;}
+.loc-inp:focus{border-color:var(--accent);}
+.loc-btn{background:var(--accent);border:none;color:#fff;padding:9px 16px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;}
+/* HEALTH */
+.h-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+.h-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.h-card h3{font-size:13.5px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.h-card p,.h-card li{font-size:12.5px;color:var(--text2);line-height:1.6;}
+.emrg{background:linear-gradient(135deg,#7f1d1d,#991b1b);border:1px solid #ef4444;border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+.emrg h3{color:#fca5a5;margin-bottom:10px;font-size:14px;}
+.emrg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;}
+.emrg-item{background:rgba(0,0,0,.3);border-radius:9px;padding:9px;display:flex;align-items:center;gap:8px;}
+.emrg-num{font-size:17px;font-weight:700;color:#fca5a5;}
+.emrg-desc{font-size:11.5px;color:#fecaca;}
+/* SOIL */
+.s-table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card);border-radius:var(--radius);overflow:hidden;}
+.s-table th{background:var(--bg3);color:var(--text);padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.s-table td{padding:9px 12px;color:var(--text2);border-bottom:1px solid var(--border);}
+.s-table tr:last-child td{border:none;}
+.s-table tr:hover td{background:var(--bg3);}
+/* MEDICINES */
+.acc-wrap{margin-bottom:7px;}
+.acc-hdr{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;cursor:pointer;display:flex;justify-content:space-between;font-weight:600;font-size:13px;transition:all .2s;font-family:inherit;color:var(--text);width:100%;text-align:left;}
+.acc-hdr:hover{border-color:var(--accent);}
+.acc-hdr.open{border-color:var(--accent);border-bottom-left-radius:0;border-bottom-right-radius:0;}
+.acc-body{display:none;background:var(--bg2);border:1px solid var(--accent);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:12px;}
+.acc-body.open{display:block;}
+.m-sec{margin-bottom:10px;}
+.m-sec h4{font-size:12px;color:var(--gold);margin-bottom:5px;}
+.m-tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:3px 9px;border-radius:20px;font-size:11.5px;margin:2px;}
+/* CONTACTS */
+.ct-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+.ct-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.ct-card h3{font-size:13.5px;font-weight:700;margin-bottom:10px;color:var(--accent);}
+.ct-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;}
+.ct-item:last-child{border:none;}
+.ct-icon{font-size:15px;width:24px;flex-shrink:0;}
+.ct-val{color:var(--text2);}
+.hl-big{display:flex;align-items:center;gap:12px;background:rgba(34,197,94,.08);border:1px solid var(--accent);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.hl-num{font-size:26px;font-weight:700;color:var(--accent);}
+.hl-desc{font-size:12px;color:var(--text2);}
+/* SHARED */
+.sec-title{font-size:19px;font-weight:700;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.sec-title span{color:var(--accent);}
+.srch-box{position:relative;margin-bottom:14px;}
+.srch-inp{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 13px 9px 38px;border-radius:9px;font-size:13px;font-family:inherit;outline:none;}
+.srch-inp:focus{border-color:var(--accent);}
+.srch-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:580px){.w-stats{grid-template-columns:repeat(2,1fr);}.logo-name{font-size:14px;}.main{padding:10px;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🌾</div>
+    <div>
+      <div class="logo-name">ग्राम सहायक AI</div>
+      <div class="logo-sub">Gram Sahayak AI • Rural Low-Bandwidth Assistant</div>
+    </div>
+  </div>
+  <div class="header-controls">
+    <div class="status-pill">
+      <div class="status-dot" id="sDot"></div>
+      <span id="sTxt">Online</span>
+    </div>
+    <button class="lang-toggle" onclick="toggleLang()" id="langBtn">English</button>
+    <button class="btn-icon" onclick="toggleTheme()" id="themeBtn">☀️</button>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="showSec('chat')">🤖 AI चैट</div>
+  <div class="nav-tab" onclick="showSec('cal')">📅 कैलेंडर</div>
+  <div class="nav-tab" onclick="showSec('schemes')">🏛 योजनाएं</div>
+  <div class="nav-tab" onclick="showSec('weather')">🌦 मौसम</div>
+  <div class="nav-tab" onclick="showSec('health')">💊 स्वास्थ्य</div>
+  <div class="nav-tab" onclick="showSec('soil')">🌱 मिट्टी</div>
+  <div class="nav-tab" onclick="showSec('meds')">🧪 दवाएं</div>
+  <div class="nav-tab" onclick="showSec('contacts')">📞 संपर्क</div>
+</div>
+
+<div class="main">
+
+<!-- CHAT -->
+<div class="section active" id="s-chat">
+  <div class="offline-bar">
+    <div class="ol-dot" id="olDot"></div>
+    <span id="olTxt">✅ Connected — Claude AI active | Offline FAQ database ready</span>
+  </div>
+  <div class="quick-row">
+    <button class="q-btn" onclick="sq('गेहूं की खेती कैसे करें?')">🌾 गेहूं खेती</button>
+    <button class="q-btn" onclick="sq('PM-KISAN योजना क्या है?')">💰 PM-KISAN</button>
+    <button class="q-btn" onclick="sq('फसल बीमा के बारे में बताएं')">🛡 फसल बीमा</button>
+    <button class="q-btn" onclick="sq('कीटनाशक का सुरक्षित उपयोग बताएं')">🐛 कीटनाशक</button>
+    <button class="q-btn" onclick="sq('Wheat farming tips for UP farmers')">🌾 Wheat Tips</button>
+    <button class="q-btn" onclick="sq('KCC loan kaise milega?')">💳 KCC Loan</button>
+    <button class="q-btn" onclick="sq('जैविक खेती कैसे करें?')">🌿 Organic</button>
+  </div>
+  <div class="chat-wrap">
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg bot">
+        <div class="msg-av">🌾</div>
+        <div>
+          <div class="msg-bbl">
+            <strong>नमस्ते! मैं ग्राम सहायक AI हूँ।</strong><br>
+            मैं आपकी मदद कर सकता हूँ:<br>
+            🌾 खेती और फसल की जानकारी<br>
+            🏛 सरकारी योजनाएं (PM-KISAN, PMFBY, KCC...)<br>
+            💊 किसानों के लिए स्वास्थ्य सलाह<br>
+            🌦 मौसम जानकारी और कृषि सलाह<br>
+            🧪 फसल रोग और कीट प्रबंधन<br><br>
+            <em>Hello! I'm Gram Sahayak AI — your rural farming assistant. Ask me anything about crops, government schemes, health or weather!</em>
+            <span class="badge">⚡ AI</span>
+          </div>
+          <div class="msg-time">अभी • Just now</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-wrap">
+      <textarea class="chat-input" id="chatIn" placeholder="यहाँ अपना सवाल लिखें... / Type your question here..." rows="1" onkeydown="hKey(event)"></textarea>
+      <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="section" id="s-cal">
+  <div class="sec-title">📅 <span>किसान कैलेंडर</span> / Farmer Calendar</div>
+  <div class="cal-hdr">
+    <button class="cal-nav-btn" onclick="chMon(-1)">‹</button>
+    <div class="cal-month-title" id="calTitle"></div>
+    <button class="cal-nav-btn" onclick="chMon(1)">›</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div id="calEvBox" style="background:var(--card);border:1px solid var(--accent);border-radius:var(--radius);padding:13px;margin-bottom:14px;display:none;">
+    <h4 id="calEvTitle" style="font-size:13px;color:var(--accent);margin-bottom:6px;"></h4>
+    <p id="calEvTxt" style="font-size:12.5px;color:var(--text2);"></p>
+  </div>
+  <div class="season-grid">
+    <div class="s-card">
+      <h3 style="color:#93c5fd;">❄️ रबी सीजन / Rabi (Oct–Mar)</h3>
+      <table>
+        <tr><th>महीना/Month</th><th>गतिविधि/Activity</th></tr>
+        <tr><td>अक्टू/Oct</td><td>गेहूं व सरसों बुवाई / Wheat & Mustard sowing</td></tr>
+        <tr><td>नवं/Nov</td><td>सिंचाई, खाद / Irrigation, Fertilizer</td></tr>
+        <tr><td>दिसं/Dec</td><td>खरपतवार नियंत्रण / Weed control</td></tr>
+        <tr><td>जन/Jan</td><td>सिंचाई, रोग नियंत्रण / Disease control</td></tr>
+        <tr><td>फर/Feb</td><td>सरसों कटाई / Mustard harvest</td></tr>
+        <tr><td>मार्च/Mar</td><td>गेहूं कटाई / Wheat harvest</td></tr>
+      </table>
+      <div style="margin-top:8px;"><span class="s-badge rb">🌾 Wheat</span><span class="s-badge rb">🌻 Mustard</span><span class="s-badge rb">🥔 Potato</span><span class="s-badge rb">🟢 Peas</span></div>
+    </div>
+    <div class="s-card">
+      <h3 style="color:#86efac;">🌧 खरीफ सीजन / Kharif (Jun–Oct)</h3>
+      <table>
+        <tr><th>महीना/Month</th><th>गतिविधि/Activity</th></tr>
+        <tr><td>जून/Jun</td><td>भूमि तैयारी, नर्सरी / Land prep, Nursery</td></tr>
+        <tr><td>जुलाई/Jul</td><td>धान रोपाई, मक्का / Paddy transplant, Maize</td></tr>
+        <tr><td>अग/Aug</td><td>खाद, खरपतवार / Fertilizer, Weed control</td></tr>
+        <tr><td>सित/Sep</td><td>कीट प्रबंधन / Pest management</td></tr>
+        <tr><td>अक्टू/Oct</td><td>धान कटाई / Paddy harvest</td></tr>
+      </table>
+      <div style="margin-top:8px;"><span class="s-badge kb">🌾 Paddy</span><span class="s-badge kb">🌽 Maize</span><span class="s-badge kb">🫘 Arhar</span><span class="s-badge kb">🥜 Groundnut</span></div>
+    </div>
+    <div class="s-card">
+      <h3 style="color:#fdba74;">☀️ जायद सीजन / Zaid (Mar–Jun)</h3>
+      <table>
+        <tr><th>महीना/Month</th><th>गतिविधि/Activity</th></tr>
+        <tr><td>मार्च/Mar</td><td>तरबूज बुवाई / Watermelon sowing</td></tr>
+        <tr><td>अप्रैल/Apr</td><td>सब्जी खेती / Vegetable cultivation</td></tr>
+        <tr><td>मई/May</td><td>सिंचाई व कटाई / Irrigation & harvest</td></tr>
+      </table>
+      <div style="margin-top:8px;"><span class="s-badge zb">🍉 Watermelon</span><span class="s-badge zb">🥒 Cucumber</span><span class="s-badge zb">🌽 Summer Maize</span></div>
+    </div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:14px;">
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--gold);">🧑‍🌾 महत्वपूर्ण समयसीमाएं / Important Deadlines</h3>
+    <p style="font-size:12.5px;color:var(--text2);margin-bottom:6px;">🌾 PM फसल बीमा — बुवाई से पहले आवेदन करें / Apply before sowing season</p>
+    <p style="font-size:12.5px;color:var(--text2);margin-bottom:6px;">🏛 PM-KISAN किस्त — साल में 3 बार / 3 installments per year</p>
+    <p style="font-size:12.5px;color:var(--text2);">💳 KCC नवीनीकरण — फसल सीजन से पहले / Before crop season</p>
+  </div>
+</div>
+
+<!-- SCHEMES -->
+<div class="section" id="s-schemes">
+  <div class="sec-title">🏛 <span>किसान योजनाएं</span> / Farmer Schemes</div>
+  <div class="srch-box">
+    <span class="srch-ico">🔍</span>
+    <input class="srch-inp" placeholder="योजना खोजें / Search scheme..." oninput="filterSc(this.value)">
+  </div>
+  <div class="schemes-grid" id="scGrid"></div>
+</div>
+<div class="modal-overlay" id="scModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeMod()">✕</button>
+    <div id="modContent"></div>
+  </div>
+</div>
+
+<!-- WEATHER -->
+<div class="section" id="s-weather">
+  <div class="sec-title">🌦 <span>मौसम जानकारी</span> / Weather Info</div>
+  <div class="loc-row">
+    <input class="loc-inp" id="locInp" placeholder="शहर का नाम / City name (e.g. Lucknow, Delhi, Varanasi)" value="Lucknow">
+    <button class="loc-btn" onclick="fetchWx()">🔍 खोजें</button>
+  </div>
+  <div id="wxBox"><div style="text-align:center;padding:36px;color:var(--text2);">⏳ मौसम लोड हो रही है... / Loading weather...</div></div>
+</div>
+
+<!-- HEALTH -->
+<div class="section" id="s-health">
+  <div class="sec-title">💊 <span>स्वास्थ्य गाइड</span> / Farmer Health Guide</div>
+  <div class="emrg">
+    <h3>🚨 आपातकालीन नंबर / Emergency Numbers</h3>
+    <div class="emrg-grid">
+      <div class="emrg-item"><div><div class="emrg-num">108</div><div class="emrg-desc">एम्बुलेंस / Ambulance</div></div></div>
+      <div class="emrg-item"><div><div class="emrg-num">112</div><div class="emrg-desc">सामान्य आपातकाल</div></div></div>
+      <div class="emrg-item"><div><div class="emrg-num">1800-180-1551</div><div class="emrg-desc">किसान कॉल सेंटर</div></div></div>
+      <div class="emrg-item"><div><div class="emrg-num">100</div><div class="emrg-desc">पुलिस / Police</div></div></div>
+    </div>
+  </div>
+  <div class="h-cards" id="hCards"></div>
+</div>
+
+<!-- SOIL -->
+<div class="section" id="s-soil">
+  <div class="sec-title">🌱 <span>मिट्टी एवं राज्यवार फसल</span> / Soil & State Crops</div>
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;">🌍 भारत में प्रमुख मिट्टी / Major Soil Types</h3>
+  <div style="overflow-x:auto;margin-bottom:20px;">
+    <table class="s-table">
+      <tr><th>मिट्टी / Soil</th><th>राज्य / States</th><th>फसलें / Crops</th></tr>
+      <tr><td>जलोढ़ / Alluvial</td><td>उत्तरी मैदान</td><td>Wheat, Rice, Sugarcane</td></tr>
+      <tr><td>काली / Black (Regur)</td><td>दक्कन पठार</td><td>Cotton, Soybean</td></tr>
+      <tr><td>लाल / Red</td><td>दक्षिण व पूर्वी भारत</td><td>Millets, Pulses</td></tr>
+      <tr><td>लेटेराइट / Laterite</td><td>पश्चिमी घाट</td><td>Tea, Coffee, Spices</td></tr>
+      <tr><td>रेगिस्तानी / Desert</td><td>पश्चिमी राजस्थान</td><td>Bajra, Mustard</td></tr>
+      <tr><td>पर्वतीय / Mountain</td><td>हिमालयी क्षेत्र</td><td>Apple, Tea, Maize</td></tr>
+    </table>
+  </div>
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;">🗺 राज्यवार प्रोफाइल / State-wise Profile</h3>
+  <div id="stCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;"></div>
+  <h3 style="font-size:14px;font-weight:700;margin-top:18px;margin-bottom:10px;">🌦 फसल सीजन / Cropping Seasons</h3>
+  <div style="overflow-x:auto;">
+    <table class="s-table">
+      <tr><th>सीजन</th><th>बुवाई / Sowing</th><th>कटाई / Harvest</th><th>मुख्य फसलें / Crops</th></tr>
+      <tr><td>🌧 खरीफ / Kharif</td><td>Jun–Jul</td><td>Sep–Oct</td><td>Rice, Maize, Cotton</td></tr>
+      <tr><td>❄️ रबी / Rabi</td><td>Oct–Dec</td><td>Apr–May</td><td>Wheat, Mustard, Gram</td></tr>
+      <tr><td>☀️ जायद / Zaid</td><td>Mar–Jun</td><td>Jun–Jul</td><td>Watermelon, Cucumber</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- MEDICINES -->
+<div class="section" id="s-meds">
+  <div class="sec-title">🧪 <span>कृषि दवाएं</span> / Agricultural Medicines</div>
+  <div style="background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#fca5a5;">
+    ⚠️ <strong>चेतावनी:</strong> हमेशा लेबल निर्देशों का पालन करें। राज्य कृषि सलाह के अनुसार उपयोग करें। / Always follow label instructions. Use per state agriculture advisory.
+  </div>
+  <div id="medAcc"></div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:14px;">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:10px;color:var(--accent);">🌿 जैविक विकल्प / Organic Alternatives</h3>
+    <div><span class="m-tag">🌿 Neem Oil (Azadirachtin)</span><span class="m-tag">🍄 Beauveria bassiana</span><span class="m-tag">🌱 Trichoderma</span><span class="m-tag">🪤 Pheromone traps</span></div>
+  </div>
+</div>
+
+<!-- CONTACTS -->
+<div class="section" id="s-contacts">
+  <div class="sec-title">📞 <span>संपर्क व हेल्पलाइन</span> / Contacts & Helplines</div>
+  <div class="hl-big">
+    <div style="font-size:34px;">📞</div>
+    <div><div class="hl-num">1800-180-1551</div><div class="hl-desc">किसान कॉल सेंटर — राष्ट्रीय टोल-फ्री / Kisan Call Centre — Free</div></div>
+  </div>
+  <div class="ct-cards" id="ctCards"></div>
+</div>
+
+</div>
+
+<script>
+// =========== DATA ===========
+const SCHEMES = [
+  {icon:'💰',title:'PM-KISAN',titleHi:'PM-किसान',benefit:'₹6,000/year',benefitHi:'₹6,000/वर्ष',desc:'Direct benefit to all landholding farmers.',descHi:'सभी किसान परिवारों को DBT से ₹6,000/वर्ष।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">💰 PM-KISAN</h2><p><strong>लाभ:</strong> ₹6,000/वर्ष — 3 किस्तें (₹2,000 प्रत्येक)</p><p><strong>मोड:</strong> DBT — सीधे बैंक खाते में</p><p><strong>पात्रता:</strong> सभी भूमि-धारक किसान परिवार</p><p><strong>बाहर:</strong> आयकर दाता, संस्थागत भूमि-धारक</p><p><strong>आवेदन:</strong> PM-KISAN portal या CSC center</p><p><strong>Launched:</strong> 2019 | Mode: Direct Benefit Transfer</p>`},
+  {icon:'🛡',title:'PMFBY Crop Insurance',titleHi:'PMFBY फसल बीमा',benefit:'Natural disaster coverage',benefitHi:'प्राकृतिक आपदा बीमा',desc:'Protection from floods, drought, cyclone, pests.',descHi:'बाढ़, सूखा, चक्रवात, कीट से फसल बीमा।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🛡 PMFBY</h2><p><strong>खरीफ प्रीमियम:</strong> 2%</p><p><strong>रबी प्रीमियम:</strong> 1.5%</p><p><strong>बागवानी:</strong> 5%</p><p><strong>कवरेज:</strong> बाढ़, सूखा, चक्रवात, कीट हमला</p><p><strong>क्लेम:</strong> बैंक/बीमा कंपनी के माध्यम से</p>`},
+  {icon:'👴',title:'Kisan Maandhan Pension',titleHi:'किसान मानधन पेंशन',benefit:'₹3,000/month after 60',benefitHi:'60 वर्ष बाद ₹3,000/माह',desc:'Pension for small farmers aged 18-40.',descHi:'18-40 वर्ष के छोटे किसानों के लिए पेंशन।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">👴 Kisan Maandhan</h2><p><strong>पेंशन:</strong> 60 साल बाद ₹3,000/माह</p><p><strong>उम्र:</strong> 18-40 वर्ष</p><p><strong>योगदान:</strong> ₹55-₹200/माह (उम्र के अनुसार)</p><p><strong>सरकार:</strong> बराबर राशि का योगदान करती है</p>`},
+  {icon:'💳',title:'Kisan Credit Card (KCC)',titleHi:'किसान क्रेडिट कार्ड',benefit:'7% interest (4% with subsidy)',benefitHi:'7% ब्याज (सब्सिडी से 4%)',desc:'Short-term crop loan. Also covers dairy & fisheries.',descHi:'अल्पकालिक फसल ऋण — डेयरी और मत्स्य भी।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">💳 Kisan Credit Card</h2><p><strong>उद्देश्य:</strong> अल्पकालिक फसल ऋण</p><p><strong>ब्याज दर:</strong> 7% (सब्सिडी से 4%)</p><p><strong>सीमा:</strong> भूमि और फसल के अनुसार</p><p><strong>कवर:</strong> डेयरी और मत्स्य पालन भी</p>`},
+  {icon:'💧',title:'PMKSY - Har Khet Ko Pani',titleHi:'PMKSY - हर खेत को पानी',benefit:'Drip & sprinkler subsidy',benefitHi:'ड्रिप व स्प्रिंकलर सब्सिडी',desc:'Irrigation facility expansion across India.',descHi:'सिंचाई सुविधाओं का देशव्यापी विस्तार।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">💧 PMKSY</h2><p><strong>टैगलाइन:</strong> हर खेत को पानी</p><p><strong>शामिल:</strong> ड्रिप सिंचाई, स्प्रिंकलर सिस्टम</p><p><strong>सब्सिडी:</strong> राज्य के अनुसार अलग-अलग</p>`},
+  {icon:'🧪',title:'Soil Health Card',titleHi:'मृदा स्वास्थ्य कार्ड',benefit:'Free soil testing every 2 years',benefitHi:'हर 2 साल मुफ्त मिट्टी जांच',desc:'Nutrient status & fertilizer recommendation report.',descHi:'पोषक तत्व की जानकारी और खाद सिफारिश।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🧪 Soil Health Card</h2><p><strong>लाभ:</strong> हर 2 साल मुफ्त मिट्टी जांच</p><p><strong>रिपोर्ट:</strong> पोषक तत्व + खाद सिफारिश</p><p><strong>लक्ष्य:</strong> लागत कम करना, उत्पादकता बढ़ाना</p>`},
+  {icon:'🌿',title:'PKVY Organic Farming',titleHi:'PKVY जैविक खेती',benefit:'₹50,000/hectare for 3 years',benefitHi:'₹50,000/हेक्टेयर (3 वर्ष)',desc:'Training, certification & marketing for organic farming.',descHi:'जैविक खेती के लिए प्रशिक्षण, प्रमाणन, मार्केटिंग।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🌿 PKVY</h2><p><strong>उद्देश्य:</strong> जैविक खेती को बढ़ावा</p><p><strong>सहायता:</strong> ₹50,000/हेक्टेयर (3 वर्ष)</p><p><strong>शामिल:</strong> प्रशिक्षण, प्रमाणन, मार्केटिंग सहायता</p>`},
+  {icon:'🛒',title:'eNAM Online Market',titleHi:'eNAM ऑनलाइन मार्केट',benefit:'Sell produce nationwide',benefitHi:'देशभर में उपज बेचें',desc:'Online trading platform for better price transparency.',descHi:'बेहतर मूल्य पारदर्शिता के लिए ऑनलाइन ट्रेडिंग।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🛒 eNAM</h2><p><strong>प्रकार:</strong> ऑनलाइन ट्रेडिंग प्लेटफॉर्म</p><p><strong>लाभ:</strong> पूरे भारत में उपज बेचें</p><p><strong>फायदा:</strong> बेहतर मूल्य पारदर्शिता, APMC मंडियों से जुड़ाव</p>`},
+  {icon:'🏗',title:'Agri Infrastructure Fund',titleHi:'कृषि अवसंरचना निधि',benefit:'₹2 crore loan, 3% subsidy',benefitHi:'₹2 करोड़ ऋण, 3% सब्सिडी',desc:'For warehouses, cold storage, processing units.',descHi:'गोदाम, कोल्ड स्टोरेज, प्रसंस्करण इकाइयों के लिए।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🏗 Agriculture Infrastructure Fund</h2><p><strong>ऋण सीमा:</strong> ₹2 करोड़ तक</p><p><strong>ब्याज सब्सिडी:</strong> 3%</p><p><strong>उपयोग:</strong> गोदाम, कोल्ड स्टोरेज, प्रसंस्करण</p>`},
+  {icon:'🚜',title:'PM Kisan Tractor Yojana',titleHi:'PM किसान ट्रैक्टर योजना',benefit:'20-50% subsidy on tractor',benefitHi:'ट्रैक्टर पर 20-50% सब्सिडी',desc:'State-based subsidy for tractor purchase.',descHi:'राज्य के अनुसार ट्रैक्टर खरीद पर सब्सिडी।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🚜 PM Kisan Tractor Yojana</h2><p><strong>लाभ:</strong> ट्रैक्टर खरीद पर 20-50% सब्सिडी</p><p><strong>नोट:</strong> राज्य के अनुसार उपलब्धता भिन्न</p>`},
+  {icon:'🐟',title:'PMMSY Fisheries',titleHi:'PMMSY मत्स्य पालन',benefit:'40-60% subsidy',benefitHi:'40-60% सब्सिडी',desc:'Support for pond construction and cold chain.',descHi:'तालाब निर्माण और कोल्ड चेन के लिए सहायता।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🐟 PMMSY</h2><p><strong>क्षेत्र:</strong> मत्स्य पालन</p><p><strong>सहायता:</strong> तालाब निर्माण, कोल्ड चेन</p><p><strong>सब्सिडी:</strong> 40-60% (श्रेणी के अनुसार)</p>`},
+  {icon:'👩‍🌾',title:'Mahila Kisan Sashaktikaran',titleHi:'महिला किसान सशक्तिकरण',benefit:'Skill training & financial aid',benefitHi:'कौशल प्रशिक्षण व वित्तीय सहायता',desc:'Empowers women farmers with skills and finance.',descHi:'महिला किसानों को कौशल प्रशिक्षण और आर्थिक सहायता।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">👩‍🌾 Mahila Kisan Sashaktikaran</h2><p><strong>लक्ष्य:</strong> महिला किसान</p><p><strong>लाभ:</strong> कौशल प्रशिक्षण, वित्तीय सहायता</p>`},
+  {icon:'🌾',title:'National Food Security Mission',titleHi:'राष्ट्रीय खाद्य सुरक्षा मिशन',benefit:'Seeds & equipment subsidy',benefitHi:'बीज व उपकरण सब्सिडी',desc:'Focus crops: Rice, Wheat, Pulses. Increase food production.',descHi:'चावल, गेहूं, दालों का उत्पादन बढ़ाना।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">🌾 NFSM</h2><p><strong>फोकस फसलें:</strong> चावल, गेहूं, दालें</p><p><strong>सहायता:</strong> बीज, उपकरण सब्सिडी</p><p><strong>लक्ष्य:</strong> खाद्य उत्पादन बढ़ाना</p>`},
+  {icon:'💦',title:'Micro Irrigation Fund',titleHi:'माइक्रो सिंचाई निधि',benefit:'Drip & sprinkler irrigation',benefitHi:'ड्रिप व स्प्रिंकलर सिंचाई',desc:'Save water and increase yield with micro irrigation.',descHi:'पानी बचाएं और ड्रिप/स्प्रिंकलर से उत्पादन बढ़ाएं।',detail:`<h2 style="color:var(--accent);margin-bottom:10px;">💦 Micro Irrigation Fund</h2><p><strong>सहायता:</strong> ड्रिप और स्प्रिंकलर सिंचाई</p><p><strong>लक्ष्य:</strong> पानी की बचत, उत्पादन वृद्धि</p>`},
+];
+
+const HEALTH_DATA = [
+  {icon:'☀️',title:'Heat Stroke / लू से बचाव',content:'हर 20-30 मिनट में पानी पिएं। हल्के कपड़े पहनें। दोपहर 12-3 बजे भारी काम न करें।<br><em>Drink water every 20-30 min. Wear light clothes. Avoid heavy work 12-3 PM.</em><br><strong>लक्षण / Symptoms:</strong> चक्कर, सिरदर्द, उल्टी — तुरंत छाया में जाएं / Move to shade immediately.'},
+  {icon:'🧪',title:'Pesticide Safety / कीटनाशक सुरक्षा',content:'दस्ताने, मास्क, पूरी बाजू पहनें। हवा में स्प्रे न करें। बाद में नहाएं।<br><em>Wear gloves, mask, full sleeves. No spraying in wind. Bathe after spraying.</em><br>जहर के लक्षण पर तुरंत अस्पताल जाएं / Go to hospital immediately if poisoning symptoms appear.'},
+  {icon:'🚜',title:'Machinery Safety / मशीनरी सुरक्षा',content:'मशीन के पास ढीले कपड़े न पहनें। मरम्मत से पहले इंजन बंद करें। बच्चों को दूर रखें।<br><em>No loose clothes near machines. Switch off before repair. Keep children away.</em>'},
+  {icon:'🐄',title:'Animal Safety / पशु सुरक्षा',content:'जानवरों को छूने के बाद हाथ धोएं। नियमित टीकाकरण करें। पशु की चोट का तुरंत इलाज।<br><em>Wash hands after handling animals. Vaccinate regularly. Treat injuries immediately.</em><br>जोखिम: Tetanus, Rabies, Skin infections'},
+  {icon:'🫁',title:'Respiratory Health / श्वसन स्वास्थ्य',content:'कटाई/थ्रेशिंग के दौरान मास्क पहनें। पराली न जलाएं।<br><em>Wear mask during harvesting. Avoid burning stubble.</em><br>लंबी खांसी, सांस की तकलीफ पर डॉक्टर से मिलें।'},
+  {icon:'🧠',title:'Mental Health / मानसिक स्वास्थ्य',content:'फसल नुकसान, कर्ज का तनाम आम है। परिवार से बात करें। किसान समूह से जुड़ें।<br><em>Farm stress is common. Talk to family. Join farmer groups. Seek govt support schemes.</em><br>गंभीर अवसाद/चिंता पर चिकित्सक से मिलें।'},
+  {icon:'💉',title:'Vaccinations / टीके',content:'Tetanus (10 साल में एक बार) | Rabies (पशु संपर्क से) | Hepatitis B | COVID-19<br><em>Tetanus (10 yearly) | Rabies | Hepatitis B | COVID-19 | Influenza (optional)</em>'},
+  {icon:'🐍',title:'Snakebite / सांप का काटना',content:'शांत रहें। काटे स्थान को न काटें, न चूसें। तुरंत अस्पताल जाएं।<br><em>Stay calm. Do NOT cut or suck the wound. Go to hospital immediately. Wear boots in fields.</em>'},
+  {icon:'🥗',title:'Farmer Nutrition / पोषण',content:'दाल, दूध, अंडे (प्रोटीन) | हरी सब्जियां | मौसमी फल | गुड़ (आयरन)<br><em>Dal, milk, eggs (protein) | Green vegetables | Seasonal fruits | Jaggery for iron</em><br>तंबाकू व शराब कम करें / Reduce tobacco & alcohol'},
+];
+
+const MEDICINES = [
+  {crop:'🌾 Rice / धान',pests:[{n:'Stem borer',m:'Chlorantraniliprole, Cartap hydrochloride'},{n:'Brown planthopper',m:'Imidacloprid, Thiamethoxam'},{n:'Leaf folder',m:'Flubendiamide, Emamectin benzoate'}],diseases:[{n:'Blast',m:'Tricyclazole, Isoprothiolane'},{n:'Sheath blight',m:'Validamycin, Hexaconazole'},{n:'Bacterial leaf blight',m:'Streptocycline + Copper oxychloride'}],weeds:'Pre: Butachlor, Pretilachlor | Post: Bispyribac sodium'},
+  {crop:'🌾 Wheat / गेहूं',pests:[{n:'Aphids',m:'Imidacloprid, Dimethoate'},{n:'Termites',m:'Chlorpyrifos (soil treatment)'}],diseases:[{n:'Rust',m:'Propiconazole, Tebuconazole'},{n:'Loose smut',m:'Carboxin (seed treatment)'}],weeds:'Phalaris minor: Clodinafop | Broadleaf: 2,4-D'},
+  {crop:'🌿 Cotton / कपास',pests:[{n:'Pink bollworm',m:'Emamectin benzoate, Spinosad'},{n:'Whitefly',m:'Thiamethoxam, Buprofezin'},{n:'Aphids/Jassids',m:'Imidacloprid'}],diseases:[{n:'Wilt',m:'Carbendazim'},{n:'Leaf spot',m:'Mancozeb'}],weeds:'Pendimethalin (pre-emergence)'},
+  {crop:'🌽 Maize / मक्का',pests:[{n:'Fall Armyworm',m:'Chlorantraniliprole, Spinetoram, Emamectin benzoate'}],diseases:[{n:'Turcicum leaf blight',m:'Mancozeb'},{n:'Downy mildew',m:'Metalaxyl'}],weeds:'Atrazine (pre-emergence)'},
+  {crop:'🌻 Mustard / सरसों',pests:[{n:'Aphids',m:'Imidacloprid, Thiamethoxam'}],diseases:[{n:'Alternaria Blight',m:'Mancozeb, Chlorothalonil'}],weeds:'—'},
+  {crop:'🥔 Potato / आलू',pests:[{n:'Tuber moth',m:'Chlorantraniliprole'}],diseases:[{n:'Late Blight',m:'Metalaxyl + Mancozeb, Cymoxanil'}],weeds:'—'},
+  {crop:'🍅 Vegetables (Tomato/Chilli)',pests:[{n:'Fruit borer',m:'Spinosad, Emamectin benzoate'}],diseases:[{n:'Powdery mildew',m:'Hexaconazole, Sulphur'},{n:'Damping off',m:'Carbendazim (seed treatment)'}],weeds:'—'},
+  {crop:'🥭 Mango / आम',pests:[{n:'Hopper',m:'Imidacloprid'}],diseases:[{n:'Anthracnose',m:'Carbendazim, Copper oxychloride'}],weeds:'—'},
+];
+
+const STATE_CROPS = [
+  {s:'🌾 Uttar Pradesh',soil:'Alluvial (जलोढ़)',crops:'Wheat, Rice, Sugarcane, Potato',sp:'Largest sugarcane producer'},
+  {s:'🌾 Punjab',soil:'Alluvial',crops:'Wheat, Rice',sp:'"Granary of India"'},
+  {s:'🌾 Maharashtra',soil:'Black Cotton Soil',crops:'Cotton, Soybean, Sugarcane',sp:'Mainly Kharif farming'},
+  {s:'🌾 Rajasthan',soil:'Desert & Sandy',crops:'Bajra, Mustard, Wheat',sp:'Drought-resistant farming'},
+  {s:'🌾 Tamil Nadu',soil:'Red & Alluvial',crops:'Rice, Sugarcane, Groundnut',sp:'Multiple cropping seasons'},
+  {s:'🌾 West Bengal',soil:'Alluvial',crops:'Rice, Jute, Tea',sp:'High rainfall agriculture'},
+  {s:'🌾 Bihar',soil:'Alluvial',crops:'Rice, Wheat, Maize, Pulses',sp:'Floodplain agriculture'},
+  {s:'🌾 Karnataka',soil:'Red & Black',crops:'Ragi, Coffee, Sugarcane',sp:'Large millet production'},
+];
+
+const CONTACTS = [
+  {title:'Ministry of Agriculture (कृषि मंत्रालय)',icon:'🏛',items:[
+    {ic:'📍',lb:'Address',v:'Krishi Bhawan, Dr. Rajendra Prasad Road, New Delhi — 110001'},
+    {ic:'📞',lb:'Main Office',v:'+91-11-23389340'},
+    {ic:'📞',lb:'DAC&FW',v:'+91-11-23385093'},
+    {ic:'📧',lb:'Email',v:'agrimin.india@gmail.com'},
+    {ic:'📧',lb:'Secretary',v:'secy-agri@gov.in'},
+  ]},
+  {title:'Farmer Helplines (किसान हेल्पलाइन)',icon:'📞',items:[
+    {ic:'📞',lb:'Kisan Call Centre',v:'1800-180-1551 (Toll-Free)'},
+    {ic:'📞',lb:'eNAM Helpdesk',v:'1800-270-0224 (Toll-Free)'},
+    {ic:'📧',lb:'eNAM Email',v:'enam.helpdesk@gmail.com'},
+  ]},
+  {title:'ICAR (भारतीय कृषि अनुसंधान)',icon:'🔬',items:[
+    {ic:'📞',lb:'Director General',v:'+91-11-23388991'},
+    {ic:'📧',lb:'ICAR Email',v:'dg.icar@nic.in'},
+    {ic:'📞',lb:'Enquiries',v:'+91-11-25843285'},
+  ]},
+  {title:'Emergency Numbers (आपातकाल)',icon:'🚨',items:[
+    {ic:'🚑',lb:'Ambulance',v:'108'},
+    {ic:'🆘',lb:'General Emergency',v:'112'},
+    {ic:'👮',lb:'Police',v:'100'},
+    {ic:'🔥',lb:'Fire Brigade',v:'101'},
+  ]},
+];
+
+const CAL_EVENTS = {
+  1:{en:'Rabi Season: Irrigation & Disease Control for Wheat/Mustard',hi:'रबी सीजन: गेहूं/सरसों में सिंचाई और रोग नियंत्रण'},
+  2:{en:'Mustard Harvest Month — Rabi continues',hi:'सरसों कटाई का महीना — रबी सीजन जारी'},
+  3:{en:'Wheat Harvest begins / Zaid Sowing starts (Watermelon)',hi:'गेहूं कटाई / जायद बुवाई शुरू (तरबूज)'},
+  4:{en:'Zaid Season: Vegetable Cultivation',hi:'जायद सीजन: सब्जी की खेती'},
+  5:{en:'Zaid Season: Irrigation & Harvesting',hi:'जायद सीजन: सिंचाई और कटाई'},
+  6:{en:'Kharif Season begins: Land Preparation, Paddy Nursery',hi:'खरीफ सीजन शुरू: भूमि तैयारी, धान नर्सरी'},
+  7:{en:'Kharif: Paddy Transplantation, Maize Sowing',hi:'खरीफ: धान रोपाई, मक्का बुवाई'},
+  8:{en:'Kharif: Fertilizer Application, Weed Control',hi:'खरीफ: खाद प्रयोग, खरपतवार नियंत्रण'},
+  9:{en:'Kharif: Pest & Disease Management',hi:'खरीफ: कीट एवं रोग प्रबंधन'},
+  10:{en:'Paddy Harvest / Rabi Sowing starts (Wheat, Mustard)',hi:'धान कटाई / रबी बुवाई शुरू (गेहूं, सरसों)'},
+  11:{en:'Rabi: Irrigation & Fertilizer Application',hi:'रबी सीजन: सिंचाई और खाद प्रयोग'},
+  12:{en:'Rabi: Weed Control, Pest Monitoring',hi:'रबी: खरपतवार नियंत्रण, कीट निगरानी'},
+};
+
+const FAQ_DB = [
+  {k:['pm-kisan','pm kisan','किसान सम्मान'],a:'💰 PM-KISAN योजना:\n• ₹6,000/वर्ष (3 किस्तें — ₹2,000 प्रत्येक)\n• DBT — सीधे बैंक खाते में\n• पात्र: सभी भूमि-धारक किसान\n• आवेदन: PM-KISAN portal या CSC center\n\n📌 PM-KISAN scheme: ₹6,000/year in 3 installments. Apply at PM-KISAN portal or CSC center.'},
+  {k:['गेहूं','wheat','gehu'],a:'🌾 गेहूं की खेती:\n• बुवाई: अक्टूबर-नवंबर\n• खाद: DAP 50kg/एकड़ + यूरिया\n• सिंचाई: 5-6 बार\n• मुख्य रोग: रस्ट (Propiconazole से नियंत्रण)\n• कटाई: मार्च-अप्रैल\n\n🌾 Wheat: Sow Oct-Nov. Use DAP + Urea. Harvest March-April.'},
+  {k:['धान','paddy','rice','चावल'],a:'🌾 धान की खेती:\n• बुवाई: जून-जुलाई (खरीफ सीजन)\n• रोपाई: 25-30 दिन बाद\n• मुख्य कीट: तना बेधक, भूरा माहू\n• ब्लास्ट रोग: Tricyclazole से नियंत्रण\n• कटाई: अक्टूबर\n\n🌾 Paddy: Sow Jun-Jul. Transplant after 25-30 days. Harvest October.'},
+  {k:['फसल बीमा','crop insurance','pmfby'],a:'🛡 PMFBY फसल बीमा:\n• खरीफ: 2% प्रीमियम\n• रबी: 1.5% प्रीमियम\n• कवरेज: बाढ़, सूखा, चक्रवात, कीट\n• आवेदन: नजदीकी बैंक में\n• बुवाई से पहले आवेदन जरूरी\n\n🛡 PMFBY: 2% for Kharif, 1.5% for Rabi. Apply at bank before sowing.'},
+  {k:['kcc','किसान क्रेडिट','kisan credit'],a:'💳 किसान क्रेडिट कार्ड (KCC):\n• ब्याज: 7% (सब्सिडी से 4%)\n• कम लागत पर फसल ऋण\n• डेयरी और मत्स्य पालन भी\n• नजदीकी बैंक में आवेदन करें\n\n💳 KCC: 7% interest (4% with subsidy). Apply at bank.'},
+  {k:['कीटनाशक','pesticide','pest','कीट'],a:'🐛 कीटनाशक सुरक्षा:\n• दस्ताने, मास्क, पूरी बाजू पहनें\n• हवा में स्प्रे न करें\n• खाने/पीने के साथ न करें\n• बाद में नहाएं और कपड़े बदलें\n• जहर के लक्षण: तुरंत अस्पताल\n\n⚠️ Pesticide safety: Wear gloves, mask, full sleeves. Bathe after spraying.'},
+  {k:['जैविक','organic'],a:'🌿 जैविक खेती:\n• PKVY योजना: ₹50,000/हेक्टेयर (3 वर्ष)\n• Neem oil, Trichoderma, Beauveria bassiana\n• कम लागत, स्वस्थ उपज\n• प्रमाणन के लिए PKVY portal\n\n🌿 Organic farming: PKVY scheme gives ₹50,000/hectare. Use neem oil, bio-pesticides.'},
+  {k:['pension','मानधन','maandhan'],a:'👴 Kisan Maandhan पेंशन:\n• 60 साल बाद ₹3,000/माह\n• उम्र: 18-40 वर्ष\n• योगदान: ₹55-₹200/माह\n• सरकार बराबर राशि देती है\n• CSC center पर आवेदन\n\n👴 Kisan Maandhan: ₹3,000/month pension after 60. Contribution ₹55-200/month.'},
+  {k:['मौसम','weather'],a:'🌦 मौसम जानकारी के लिए ऊपर "मौसम" टैब पर जाएं।\n\n🌦 For weather information, please go to the Weather tab above.'},
+  {k:['स्वास्थ्य','health','बीमार'],a:'💊 स्वास्थ्य गाइड के लिए "स्वास्थ्य" टैब देखें।\n\nआपातकाल: 108 (एम्बुलेंस) | 112 (आपातकाल)\n\n💊 Check the Health tab for farmer health guide. Emergency: 108 | 112'},
+  {k:['soil','मिट्टी'],a:'🌱 उत्तर प्रदेश में जलोढ़ (Alluvial) मिट्टी है जो गेहूं, चावल और गन्ने के लिए उत्तम है।\n\nमृदा स्वास्थ्य कार्ड योजना से मुफ्त मिट्टी जांच कराएं।\n\n🌱 UP has alluvial soil. Get free soil testing via Soil Health Card scheme.'},
+];
+
+// =========== STATE ===========
+let lang = 'hi';
+let cSec = 'chat';
+let calY = new Date().getFullYear();
+let calM = new Date().getMonth();
+const cache = {};
+
+// =========== THEME/LANG ===========
+function toggleTheme(){
+  const h = document.documentElement;
+  const dark = h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme', dark?'light':'dark');
+  document.getElementById('themeBtn').textContent = dark?'🌙':'☀️';
+}
+function toggleLang(){
+  lang = lang==='hi'?'en':'hi';
+  document.getElementById('langBtn').textContent = lang==='hi'?'English':'हिंदी';
+  renderCal();
+}
+
+// =========== NAV ===========
+const SECS = ['chat','cal','schemes','weather','health','soil','meds','contacts'];
+function showSec(id){
+  SECS.forEach(s=>{ document.getElementById('s-'+s)?.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>{ t.classList.toggle('active', SECS[i]===id); });
+  document.getElementById('s-'+id).classList.add('active');
+  cSec = id;
+  if(id==='weather') fetchWx();
+}
+
+// =========== CALENDAR ===========
+const MN_HI = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
+const MN_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DN_HI = ['रवि','सोम','मंगल','बुध','गुरु','शुक्र','शनि'];
+const DN_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function renderCal(){
+  const mn = lang==='hi'?MN_HI:MN_EN;
+  const dn = lang==='hi'?DN_HI:DN_EN;
+  document.getElementById('calTitle').textContent = `${mn[calM]} ${calY}`;
+  const g = document.getElementById('calGrid');
+  g.innerHTML = dn.map(d=>`<div class="cal-dname">${d}</div>`).join('');
+  const first = new Date(calY,calM,1).getDay();
+  const days = new Date(calY,calM+1,0).getDate();
+  const t = new Date();
+  for(let i=0;i<first;i++) g.innerHTML+=`<div class="cal-day other"></div>`;
+  for(let d=1;d<=days;d++){
+    const isT = d===t.getDate()&&calM===t.getMonth()&&calY===t.getFullYear();
+    const hasEv = CAL_EVENTS[calM+1]&&(d===1||d===15);
+    g.innerHTML+=`<div class="cal-day${isT?' today':''}${hasEv?' has-ev':''}" onclick="showCalEv(${d},${calM+1})">${d}</div>`;
+  }
+}
+function showCalEv(d,m){
+  const ev = CAL_EVENTS[m]; if(!ev) return;
+  const box = document.getElementById('calEvBox');
+  document.getElementById('calEvTitle').textContent = `📅 ${d} ${MN_EN[m-1]}`;
+  document.getElementById('calEvTxt').textContent = lang==='hi'?ev.hi:ev.en;
+  box.style.display='block';
+}
+function chMon(dir){ calM+=dir; if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;} renderCal(); }
+
+// =========== SCHEMES ===========
+function renderSchemes(f=''){
+  const fl = f.toLowerCase();
+  const filtered = SCHEMES.filter(s=>s.title.toLowerCase().includes(fl)||s.titleHi.includes(f)||s.desc.toLowerCase().includes(fl)||s.descHi.includes(f));
+  document.getElementById('scGrid').innerHTML = filtered.map((s,i)=>`
+    <div class="sc-card" onclick="openMod(${SCHEMES.indexOf(s)})">
+      <div class="sc-icon">${s.icon}</div>
+      <div class="sc-title">${s.titleHi} / ${s.title}</div>
+      <div class="sc-benefit">${s.benefitHi} | ${s.benefit}</div>
+      <div class="sc-desc">${s.descHi}</div>
+    </div>`).join('');
+}
+function filterSc(v){ renderSchemes(v); }
+function openMod(i){ document.getElementById('modContent').innerHTML=SCHEMES[i].detail; document.getElementById('scModal').classList.add('open'); }
+function closeMod(){ document.getElementById('scModal').classList.remove('open'); }
+
+// =========== WEATHER ===========
+async function fetchWx(){
+  const city = document.getElementById('locInp').value.trim()||'Lucknow';
+  const el = document.getElementById('wxBox');
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);">⏳ लोड हो रहा है... / Loading...</div>';
+  try {
+    const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+    const gd = await geo.json();
+    if(!gd.results?.length) throw new Error('City not found / शहर नहीं मिला');
+    const {latitude:lat,longitude:lon,name,country} = gd.results[0];
+    const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`);
+    const w = await wr.json();
+    const c = w.current;
+    const wico = wxIcon(c.weather_code);
+    const wdsc = wxDesc(c.weather_code);
+    const fcHTML = w.daily.time.slice(1,6).map((dt,i)=>{
+      const day = new Date(dt).toLocaleDateString('en',{weekday:'short'});
+      return `<div class="fc-item"><div class="fc-day">${day}</div><div class="fc-icon">${wxIcon(w.daily.weather_code[i+1])}</div><div class="fc-temp">${Math.round(w.daily.temperature_2m_max[i+1])}°/${Math.round(w.daily.temperature_2m_min[i+1])}°</div></div>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="w-card">
+        <div style="font-size:58px;margin-bottom:6px;">${wico}</div>
+        <div class="w-temp">${Math.round(c.temperature_2m)}°C</div>
+        <div class="w-desc">${wdsc} — ${name}, ${country}</div>
+        <div class="w-stats">
+          <div class="w-stat"><div class="w-val">${c.relative_humidity_2m}%</div><div class="w-lbl">💧 Humidity</div></div>
+          <div class="w-stat"><div class="w-val">${c.wind_speed_10m}<span style="font-size:12px">km/h</span></div><div class="w-lbl">💨 Wind</div></div>
+          <div class="w-stat"><div class="w-val">${c.precipitation}<span style="font-size:12px">mm</span></div><div class="w-lbl">🌧 Rain</div></div>
+          <div class="w-stat"><div class="w-val">${getAQI(c)}</div><div class="w-lbl">📊 Status</div></div>
+        </div>
+      </div>
+      <h3 style="font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--text2);">📅 5-Day Forecast / 5 दिन का पूर्वानुमान</h3>
+      <div class="forecast">${fcHTML}</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-top:14px;">
+        <h4 style="font-size:13px;font-weight:700;margin-bottom:7px;color:var(--gold);">🌾 कृषि सलाह / Farming Advice</h4>
+        <div style="font-size:12.5px;color:var(--text2);line-height:1.6;">${farmAdvice(c)}</div>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;"><div style="font-size:32px;margin-bottom:8px;">⚠️</div><p style="color:var(--text2);">मौसम जानकारी उपलब्ध नहीं। / Weather unavailable.</p><p style="font-size:11px;color:var(--text3);margin-top:6px;">${e.message}</p></div>`;
+  }
+}
+function wxIcon(c){ if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=49)return'🌫️';if(c<=69)return'🌧️';if(c<=79)return'🌨️';if(c<=99)return'⛈️';return'🌡️'; }
+function wxDesc(c){ if(c===0)return'Clear / साफ';if(c<=2)return'Partly cloudy / आंशिक बादल';if(c<=3)return'Cloudy / बादल';if(c<=49)return'Foggy / कोहरा';if(c<=69)return'Rain / बारिश';if(c<=79)return'Snow / बर्फ';if(c<=99)return'Thunderstorm / आंधी';return'Mixed'; }
+function getAQI(c){ if(c.temperature_2m>38)return'⚠️Hot';if(c.temperature_2m<10)return'❄️Cold';return'✅Good'; }
+function farmAdvice(c){
+  const tips=[];
+  if(c.temperature_2m>38) tips.push('🌡️ अत्यधिक गर्मी — सुबह-शाम पानी दें। Extreme heat: water crops morning & evening.');
+  if(c.relative_humidity_2m>80) tips.push('💧 अधिक नमी — फंगल रोग की निगरानी करें। High humidity: watch for fungal disease.');
+  if(c.wind_speed_10m>30) tips.push('💨 तेज हवा — कीटनाशक स्प्रे न करें। Strong wind: avoid spraying.');
+  if(c.precipitation>10) tips.push('🌧️ अधिक वर्षा — जल निकासी सुनिश्चित करें। Heavy rain: ensure drainage.');
+  if(!tips.length) tips.push('✅ मौसम खेती के लिए अनुकूल है। Weather is favorable for farming today.');
+  return tips.join('<br>');
+}
+
+// =========== HEALTH ===========
+function renderHealth(){
+  document.getElementById('hCards').innerHTML = HEALTH_DATA.map(h=>`
+    <div class="h-card">
+      <h3>${h.icon} ${h.title}</h3>
+      <p>${h.content}</p>
+    </div>`).join('');
+}
+
+// =========== SOIL/STATES ===========
+function renderStates(){
+  document.getElementById('stCards').innerHTML = STATE_CROPS.map(s=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;">
+      <h4 style="font-size:13.5px;font-weight:700;margin-bottom:7px;">${s.s}</h4>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:3px;">🌍 <strong>Soil:</strong> ${s.soil}</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:3px;">🌾 <strong>Crops:</strong> ${s.crops}</p>
+      <p style="font-size:12px;color:var(--accent);">⭐ ${s.sp}</p>
+    </div>`).join('');
+}
+
+// =========== MEDICINES ===========
+function renderMeds(){
+  document.getElementById('medAcc').innerHTML = MEDICINES.map((m,i)=>`
+    <div class="acc-wrap">
+      <button class="acc-hdr" onclick="togAcc(${i})" id="ah${i}">${m.crop} <span>▾</span></button>
+      <div class="acc-body" id="ab${i}">
+        <div class="m-sec"><h4>🐛 कीट / Insects</h4>${m.pests.map(p=>`<div style="margin-bottom:7px;"><strong style="font-size:12.5px;color:var(--text);">${p.n}:</strong> ${p.m.split(', ').map(x=>`<span class="m-tag">${x}</span>`).join('')}</div>`).join('')}</div>
+        <div class="m-sec"><h4>🍄 रोग / Diseases</h4>${m.diseases.map(d=>`<div style="margin-bottom:7px;"><strong style="font-size:12.5px;color:var(--text);">${d.n}:</strong> ${d.m.split(', ').map(x=>`<span class="m-tag">${x}</span>`).join('')}</div>`).join('')}</div>
+        <div class="m-sec"><h4>🌱 खरपतवार / Weeds</h4><p style="font-size:12.5px;color:var(--text2);">${m.weeds}</p></div>
+      </div>
+    </div>`).join('');
+}
+function togAcc(i){ document.getElementById('ab'+i).classList.toggle('open'); document.getElementById('ah'+i).classList.toggle('open'); }
+
+// =========== CONTACTS ===========
+function renderContacts(){
+  document.getElementById('ctCards').innerHTML = CONTACTS.map(c=>`
+    <div class="ct-card">
+      <h3>${c.icon} ${c.title}</h3>
+      ${c.items.map(it=>`<div class="ct-item"><div class="ct-icon">${it.ic}</div><div><div style="font-size:10.5px;color:var(--text3);">${it.lb}</div><div class="ct-val">${it.v}</div></div></div>`).join('')}
+    </div>`).join('');
+}
+
+// =========== CHAT ===========
+function checkFAQ(q){
+  const ql = q.toLowerCase();
+  for(const f of FAQ_DB){ if(f.k.some(k=>ql.includes(k))) return f.a; }
+  return null;
+}
+function hKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+function sq(t){ document.getElementById('chatIn').value=t; sendMsg(); }
+function addMsg(txt, isUser, off=false){
+  const msgs = document.getElementById('chatMsgs');
+  const time = new Date().toLocaleTimeString('hi-IN',{hour:'2-digit',minute:'2-digit'});
+  const bdg = isUser?'':(off?'<span class="badge badge-off">📴 Offline</span>':'<span class="badge">⚡ AI</span>');
+  msgs.insertAdjacentHTML('beforeend',`
+    <div class="msg ${isUser?'user':'bot'}">
+      <div class="msg-av">${isUser?'👤':'🌾'}</div>
+      <div>
+        <div class="msg-bbl">${txt.replace(/\n/g,'<br>')}${bdg}</div>
+        <div class="msg-time">${time}</div>
+      </div>
+    </div>`);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function addTyping(){ document.getElementById('chatMsgs').insertAdjacentHTML('beforeend',`<div class="msg bot" id="typing-ind"><div class="msg-av">🌾</div><div class="msg-bbl"><div class="typing"><span></span><span></span><span></span></div></div></div>`); document.getElementById('chatMsgs').scrollTop=9999; }
+function removeTyping(){ document.getElementById('typing-ind')?.remove(); }
+
+async function sendMsg(){
+  const inp = document.getElementById('chatIn');
+  const txt = inp.value.trim(); if(!txt) return;
+  inp.value=''; inp.style.height='auto';
+  addMsg(txt, true);
+  if(cache[txt]){ addMsg(cache[txt], false); return; }
+  const offAns = checkFAQ(txt);
+  if(!navigator.onLine){ addMsg(offAns||getDefReply(txt), false, true); return; }
+  addTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':'34abd75be6bb429dece390d5b8cb4c56',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:450,
+        system:`You are Gram Sahayak AI (ग्राम सहायक AI), a helpful bilingual assistant for Indian farmers, especially in Uttar Pradesh and North India.
+
+CRITICAL RULES:
+1. Always respond in BOTH Hindi AND English (bilingual response)
+2. Keep responses SHORT (max 150 words) — low bandwidth environment
+3. Use emojis for visual clarity
+4. Give practical, actionable advice
+5. Mention government schemes (PM-KISAN ₹6000/yr, PMFBY crop insurance, KCC loan, PMKSY irrigation, Soil Health Card, PKVY organic ₹50k/ha) when relevant
+6. Agriculture knowledge: Rabi (Oct-Mar): Wheat, Mustard, Potato, Peas. Kharif (Jun-Oct): Paddy, Maize, Arhar, Groundnut. Zaid (Mar-Jun): Watermelon, Cucumber. UP soil: Alluvial. Common pests & fungicides included.
+7. Format with line breaks for easy mobile reading
+8. Be warm and respectful to farmers`,
+        messages:[{role:'user',content:txt}]
+      })
+    });
+    removeTyping();
+    if(res.ok){
+      const d = await res.json();
+      const reply = d.content[0].text;
+      cache[txt] = reply;
+      addMsg(reply, false);
+    } else {
+      addMsg(offAns||getDefReply(txt), false, true);
+    }
+  } catch(e){ removeTyping(); addMsg(offAns||getDefReply(txt), false, true); }
+}
+
+function getDefReply(t){
+  const q = t.toLowerCase();
+  if(q.includes('मौसम')||q.includes('weather')) return '🌦 मौसम जानकारी के लिए ऊपर "मौसम" टैब पर जाएं। / Go to the Weather tab above.';
+  if(q.includes('योजना')||q.includes('scheme')) return '🏛 योजनाओं की जानकारी के लिए "योजनाएं" टैब देखें। / Check the Schemes tab.';
+  if(q.includes('स्वास्थ्य')||q.includes('health')) return '💊 "स्वास्थ्य" टैब में जाएं। आपातकाल: 108 / Check the Health tab. Emergency: 108';
+  return `🌾 मैं अभी ऑफलाइन हूँ। कृपया Calendar, Schemes, Health और Soil tabs देखें।\n\nI'm offline. Please check Calendar, Schemes, Health, and Soil tabs for information.`;
+}
+
+// =========== ONLINE STATUS ===========
+function updOnline(){
+  const on = navigator.onLine;
+  document.getElementById('sDot').style.background = on?'var(--accent)':'var(--orange)';
+  document.getElementById('sTxt').textContent = on?'Online':'Offline';
+  document.getElementById('olDot').className = 'ol-dot'+(on?'':' off');
+  document.getElementById('olTxt').textContent = on
+    ?'✅ Connected — Claude AI active | Offline FAQ database ready'
+    :'📴 Offline Mode — Using local knowledge base | Zero data consumed';
+}
+window.addEventListener('online', updOnline);
+window.addEventListener('offline', updOnline);
+
+// =========== INIT ===========
+renderCal();
+renderSchemes();
+renderHealth();
+renderStates();
+renderMeds();
+renderContacts();
+updOnline();
+
+document.getElementById('chatIn').addEventListener('input', function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,90)+'px';
+});
+document.getElementById('scModal').addEventListener('click', function(e){ if(e.target===this) closeMod(); });
+</script>
+</body>
+</html>
